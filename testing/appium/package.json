@@ -1,0 +1,36 @@
+{
+  "name": "vitalpredict-appium-e2e",
+  "version": "1.0.0",
+  "description": "Enterprise Appium E2E Test Suite for VitalPredict Android App",
+  "scripts": {
+    "test": "jest --runInBand --forceExit --testTimeout=120000",
+    "test:auth": "jest tests/appium_auth.test.js --runInBand --forceExit",
+    "test:dashboard": "jest tests/appium_dashboard.test.js --runInBand --forceExit",
+    "test:regression": "jest tests/appium_regression.test.js --runInBand --forceExit",
+    "report": "node utils/appiumReportGenerator.js"
+  },
+  "dependencies": {
+    "webdriverio": "^8.36.1",
+    "@wdio/appium-service": "^8.36.1",
+    "appium": "^2.5.4",
+    "exceljs": "^4.4.0",
+    "fs-extra": "^11.2.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-html-reporter": "^3.10.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 120000,
+    "reporters": [
+      "default",
+      ["jest-html-reporter", {
+        "pageTitle": "VitalPredict Appium E2E Report",
+        "outputPath": "reports/appium-execution-report.html",
+        "includeFailureMsg": true
+      }]
+    ]
+  }
+}

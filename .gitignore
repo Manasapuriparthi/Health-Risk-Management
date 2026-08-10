@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+venv/
+env/
+.env
+*.env
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Backend server log
+backend/server_log.txt
+backend/bcrypt_ver.txt
+backend/check.txt
+backend/test_import.py
+backend/test_output.txt
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.apk
+*.aab
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/pubspec.lock
+
+# Android
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+mobile/android/app/debug/
+*.keystore
+*.jks
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+# Test artifacts
+testing/selenium/node_modules/
+testing/selenium/screenshots/
+testing/selenium/logs/
+testing/selenium/reports/
+testing/appium/node_modules/
+testing/appium/screenshots/
+testing/appium/logs/
+testing/appium/reports/
+testing/performance/reports/
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Secrets
+*.pem
+*.key
+*.cert
+*.p12
+secrets/
+.secrets
+
+# Logs
+*.log
+logs/
