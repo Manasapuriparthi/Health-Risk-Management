@@ -7,6 +7,7 @@ import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/doctor_main_shell.dart';
+import 'services/api_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,10 @@ void main() {
     systemNavigationBarColor: Color(0xFF0D1117),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
+  
+  // Start backend keep-alive ping
+  ApiService.startKeepAlive();
+  
   runApp(const VitalPredictApp());
 }
 

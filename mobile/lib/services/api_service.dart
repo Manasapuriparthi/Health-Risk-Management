@@ -1,10 +1,37 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Physical device IP — update if your network IP changes
-  static const String baseUrl = 'http://10.168.58.63:8000/api';
+  // Production backend on Render
+  static const String baseUrl = 'https://health-risk-management.onrender.com/api';
+
+  // Keep-alive timer to prevent Render cold starts
+  static Timer? _keepAliveTimer;
+
+  static void startKeepAlive() {
+    _keepAliveTimer?.cancel();
+    // Ping health endpoint immediately, then every 14 minutes
+    _pingHealth();
+    _keepAliveTimer = Timer.periodic(
+      const Duration(minutes: 14),
+      (_) => _pingHealth(),
+    );
+  }
+
+  static void stopKeepAlive() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = null;
+  }
+
+  static Future<void> _pingHealth() async {
+    try {
+      await http.get(Uri.parse('$baseUrl/health')).timeout(
+        const Duration(seconds: 10),
+      );
+    } catch (_) {}
+  }
 
   // ─── Token Storage ────────────────────────────────────────────────────────
 
