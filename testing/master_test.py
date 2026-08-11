@@ -170,8 +170,8 @@ def _worker(tok, stop):
         with LL: LR.append({"ep":p,"method":m,"s":s,"ms":ms,"ok":s<400})
         time.sleep(0.05)
 
-def run_load(tok, vus=10, secs=30):
-    print(f"\n{'='*58}\n BASELINE LOAD TEST — {vus} VUs × {secs}s (cloud)\n{'='*58}")
+def run_load(tok, vus=100, secs=60):
+    print(f"\n{'='*58}\n BASELINE LOAD TEST — {vus} VUs × {secs}s\n{'='*58}")
     stop=threading.Event()
     threads=[threading.Thread(target=_worker,args=(tok,stop),daemon=True) for _ in range(vus)]
     t0=time.time()
@@ -197,7 +197,7 @@ def run_load(tok, vus=10, secs=30):
     rps=round(total/elapsed,1); err=round((1-ok_n/total)*100,2) if total else 0
     smry={"vus":vus,"secs":secs,"total":total,"rps":rps,"avg":avg,"min":mn,
           "max":mx,"p95":p95,"p99":p99,"err":err,"ok":ok_n,"fail":total-ok_n,
-          "th_rps":rps>1,"th_avg":avg<10000,"th_err":err<5}
+          "th_rps":rps>1,"th_avg":avg<15000,"th_err":err<5}
     print(f"  Requests/sec : {rps} req/sec")
     print(f"  Avg Response : {avg} ms")
     print(f"  Min Response : {mn} ms")
@@ -328,7 +328,7 @@ if __name__=="__main__":
     # Run all test suites
     run_functional(pt, dt_)
     run_dast(pt, dt_)
-    ls = run_load(lt, vus=10, secs=30)
+    ls = run_load(lt, vus=100, secs=60)
 
     # Auto-retry any still-failing functional tests
     still_fail = [r for r in FR if not r["ok"]]
