@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://frontend-nu-ivory-0w37cbce0a.vercel.app/sitemap.xml
