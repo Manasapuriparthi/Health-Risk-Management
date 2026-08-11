@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "selenium-webdriver": "^4.18.1",
-    "chromedriver": "^124.0.0",
     "exceljs": "^4.4.0",
     "date-fns": "^3.6.0",
     "uuid": "^9.0.0",

@@ -87,7 +87,7 @@ jobs:
 
       - name: Start Frontend Preview
         run: |
-          npm run preview -- --port 5173 --host 0.0.0.0 &
+          npx vite preview --port 5173 --host 0.0.0.0 &
           sleep 5
           curl -f http://localhost:5173 || echo "Frontend not ready, tests may fail"
         working-directory: frontend
