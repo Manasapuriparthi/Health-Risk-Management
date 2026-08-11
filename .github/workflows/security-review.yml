@@ -77,7 +77,7 @@ jobs:
 
       - name: Audit Python Dependencies
         run: |
-          cd "Health Risk Management/backend"
+          cd backend
           pip-audit -r requirements.txt --format=json -o pip-audit-results.json || true
           pip-audit -r requirements.txt || true
         continue-on-error: true
@@ -90,7 +90,7 @@ jobs:
 
       - name: Audit Frontend NPM Dependencies
         run: |
-          cd "Health Risk Management/frontend"
+          cd frontend
           npm audit --json > npm-audit-frontend.json || true
           npm audit || true
         continue-on-error: true

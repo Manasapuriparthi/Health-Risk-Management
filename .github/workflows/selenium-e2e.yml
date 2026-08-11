@@ -59,7 +59,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management
 
       # ── Stage 6: Start MongoDB ─────────────────────────────────────────────
       - name: Start MongoDB
@@ -74,29 +73,29 @@ jobs:
           sleep 8
           curl -f http://localhost:8000/api/health || exit 1
           echo "✅ Backend is healthy"
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/backend
+        working-directory: backend
 
       # ── Stage 8: Install Frontend Dependencies ────────────────────────────
       - name: Install Frontend Dependencies
         run: npm ci
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/frontend
+        working-directory: frontend
 
       # ── Stage 9: Build & Start Frontend ───────────────────────────────────
       - name: Build Frontend
         run: npm run build
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/frontend
+        working-directory: frontend
 
       - name: Start Frontend Preview
         run: |
           npm run preview -- --port 5173 --host 0.0.0.0 &
           sleep 5
           curl -f http://localhost:5173 || echo "Frontend not ready, tests may fail"
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/frontend
+        working-directory: frontend
 
       # ── Stage 10: Install Selenium Dependencies ───────────────────────────
       - name: Install Selenium Test Dependencies
         run: npm ci
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
 
       # ── Stage 11: Register Test User ──────────────────────────────────────
       - name: Seed Test User
@@ -109,7 +108,7 @@ jobs:
       # ── Stage 12: Run Selenium E2E Tests ──────────────────────────────────
       - name: Run Authentication Tests
         run: npm run test:auth
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
         continue-on-error: true
         env:
           BASE_URL: 'http://localhost:5173'
@@ -118,7 +117,7 @@ jobs:
 
       - name: Run Dashboard Tests
         run: npm run test:dashboard
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
         continue-on-error: true
         env:
           BASE_URL: 'http://localhost:5173'
@@ -127,7 +126,7 @@ jobs:
 
       - name: Run Appointments Tests
         run: npm run test:appointments
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
         continue-on-error: true
         env:
           BASE_URL: 'http://localhost:5173'
@@ -135,7 +134,7 @@ jobs:
 
       - name: Run Forms & Validation Tests
         run: npm run test:forms
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
         continue-on-error: true
         env:
           BASE_URL: 'http://localhost:5173'
@@ -143,7 +142,7 @@ jobs:
 
       - name: Run Regression Suite
         run: npx jest tests/regression.test.js --runInBand --forceExit
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
         continue-on-error: true
         env:
           BASE_URL: 'http://localhost:5173'
@@ -153,7 +152,7 @@ jobs:
       - name: Generate Excel & HTML Reports
         if: always()
         run: node utils/reportGenerator.js && node utils/excelGenerator.js
-        working-directory: ${{ github.workspace }}/Health\ Risk\ Management/testing/selenium
+        working-directory: testing/selenium
         continue-on-error: true
 
       # ── Stage 14: Upload Artifacts ────────────────────────────────────────
@@ -164,9 +163,9 @@ jobs:
           name: selenium-reports-${{ github.run_number }}
           retention-days: 30
           path: |
-            Health Risk Management/testing/selenium/reports/
-            Health Risk Management/testing/selenium/screenshots/
-            Health Risk Management/testing/selenium/logs/
+            testing/selenium/reports/
+            testing/selenium/screenshots/
+            testing/selenium/logs/
 
       # ── Stage 15: Publish GitHub Pages ────────────────────────────────────
       - name: Deploy Reports to GitHub Pages
@@ -174,7 +173,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: Health Risk Management/testing/selenium/reports/HTML
+          publish_dir: testing/selenium/reports/HTML
           destination_dir: reports/selenium/latest
           keep_files: true
 
@@ -182,7 +181,7 @@ jobs:
       - name: Publish GitHub Actions Summary
         if: always()
         run: |
-          SUMMARY_FILE="Health Risk Management/testing/selenium/reports/Summary/summary.md"
+          SUMMARY_FILE="testing/selenium/reports/Summary/summary.md"
           if [ -f "$SUMMARY_FILE" ]; then
             cat "$SUMMARY_FILE" >> $GITHUB_STEP_SUMMARY
           else
@@ -190,3 +189,4 @@ jobs:
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Build:** ${{ github.run_number }} | **Commit:** ${{ github.sha }} | **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+

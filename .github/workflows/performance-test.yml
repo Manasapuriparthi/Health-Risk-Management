@@ -24,8 +24,8 @@ jobs:
 
       - name: Setup Python & Start Backend
         run: |
-          pip install -r "Health Risk Management/backend/requirements.txt"
-          cd "Health Risk Management/backend"
+          pip install -r backend/requirements.txt
+          cd backend
           uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 8
           curl -f http://localhost:8000/api/health && echo "Backend ready"
@@ -44,7 +44,7 @@ jobs:
           k6 version
 
       - name: Create Reports Directory
-        run: mkdir -p "Health Risk Management/testing/performance/reports"
+        run: mkdir -p testing/performance/reports
 
       - name: Run Baseline Load Test (100 VUs × 1 min)
         run: |
@@ -52,15 +52,15 @@ jobs:
             --env BASE_URL=http://localhost:8000/api \
             --env TEST_USER=loadtest@vitalpredict.com \
             --env TEST_PASS=Test@12345 \
-            --out json="Health Risk Management/testing/performance/reports/k6-raw.json" \
-            "Health Risk Management/testing/performance/k6-load-test.js" \
-            2>&1 | tee "Health Risk Management/testing/performance/reports/k6-output.txt" || true
+            --out json="testing/performance/reports/k6-raw.json" \
+            "testing/performance/k6-load-test.js" \
+            2>&1 | tee "testing/performance/reports/k6-output.txt" || true
 
       - name: Generate Performance Report
         if: always()
         run: |
-          mkdir -p "Health Risk Management/testing/performance/reports"
-          cat > "Health Risk Management/testing/performance/reports/performance-summary.md" << 'EOF'
+          mkdir -p testing/performance/reports
+          cat > "testing/performance/reports/performance-summary.md" << 'EOF'
           # ⚡ VitalPredict Performance Test Results
 
           ## Baseline Test (100 VUs × 1 minute)
@@ -86,7 +86,7 @@ jobs:
           The API handles 100 concurrent users efficiently with sub-500ms average
           response times. No critical bottlenecks detected at baseline load.
           EOF
-          cat "Health Risk Management/testing/performance/reports/performance-summary.md" >> $GITHUB_STEP_SUMMARY
+          cat "testing/performance/reports/performance-summary.md" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Performance Reports
         if: always()
@@ -94,4 +94,5 @@ jobs:
         with:
           name: performance-reports-${{ github.run_number }}
           retention-days: 30
-          path: Health Risk Management/testing/performance/reports/
+          path: testing/performance/reports/
+

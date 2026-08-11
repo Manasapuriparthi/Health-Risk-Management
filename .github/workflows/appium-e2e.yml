@@ -75,15 +75,15 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
-        working-directory: ${{ github.workspace }}/Health Risk Management/mobile
+        working-directory: mobile
 
       - name: Build Debug APK
         run: flutter build apk --debug
-        working-directory: ${{ github.workspace }}/Health Risk Management/mobile
+        working-directory: mobile
 
       - name: Install APK on Emulator
         run: |
-          adb install -r "Health Risk Management/mobile/build/app/outputs/flutter-apk/app-debug.apk"
+          adb install -r "mobile/build/app/outputs/flutter-apk/app-debug.apk"
           echo "✅ APK installed on emulator"
 
       # ── Stage 7: Start Backend ─────────────────────────────────────────────
@@ -93,7 +93,7 @@ jobs:
           uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 8
           echo "✅ Backend started"
-        working-directory: ${{ github.workspace }}/Health Risk Management/backend
+        working-directory: backend
 
       # ── Stage 8: Setup Appium ─────────────────────────────────────────────
       - name: Setup Node.js 20
@@ -117,12 +117,12 @@ jobs:
       # ── Stage 9: Install Test Dependencies ───────────────────────────────
       - name: Install Appium Test Dependencies
         run: npm ci
-        working-directory: ${{ github.workspace }}/Health Risk Management/testing/appium
+        working-directory: testing/appium
 
       # ── Stage 10: Run Appium Tests ────────────────────────────────────────
       - name: Run Appium Authentication Tests
         run: npm run test:auth
-        working-directory: ${{ github.workspace }}/Health Risk Management/testing/appium
+        working-directory: testing/appium
         continue-on-error: true
         env:
           APPIUM_HOST: '127.0.0.1'
@@ -133,7 +133,7 @@ jobs:
 
       - name: Run Appium Regression Suite
         run: npm run test:regression
-        working-directory: ${{ github.workspace }}/Health Risk Management/testing/appium
+        working-directory: testing/appium
         continue-on-error: true
         env:
           APPIUM_HOST: '127.0.0.1'
@@ -145,8 +145,9 @@ jobs:
       - name: Capture Device Logs
         if: always()
         run: |
-          adb logcat -d > "Health Risk Management/testing/appium/logs/device.log" 2>&1 || true
-          cat appium-server.log > "Health Risk Management/testing/appium/logs/appium.log" 2>&1 || true
+          mkdir -p testing/appium/logs
+          adb logcat -d > "testing/appium/logs/device.log" 2>&1 || true
+          cat appium-server.log > "testing/appium/logs/appium.log" 2>&1 || true
 
       # ── Stage 12: Upload Artifacts ────────────────────────────────────────
       - name: Upload Appium Test Artifacts
@@ -156,9 +157,9 @@ jobs:
           name: appium-reports-${{ github.run_number }}
           retention-days: 30
           path: |
-            Health Risk Management/testing/appium/reports/
-            Health Risk Management/testing/appium/screenshots/
-            Health Risk Management/testing/appium/logs/
+            testing/appium/reports/
+            testing/appium/screenshots/
+            testing/appium/logs/
 
       # ── Stage 13: GitHub Pages ────────────────────────────────────────────
       - name: Deploy Appium Reports to GitHub Pages
@@ -166,7 +167,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: Health Risk Management/testing/appium/reports/HTML
+          publish_dir: testing/appium/reports/HTML
           destination_dir: reports/appium/latest
           keep_files: true
 
@@ -174,6 +175,7 @@ jobs:
       - name: Publish GitHub Actions Summary
         if: always()
         run: |
-          SUMMARY="Health Risk Management/testing/appium/reports/Summary/appium-summary.md"
+          SUMMARY="testing/appium/reports/Summary/appium-summary.md"
           if [ -f "$SUMMARY" ]; then cat "$SUMMARY" >> $GITHUB_STEP_SUMMARY; fi
           echo "**Build:** ${{ github.run_number }} | **Platform:** Android API 34" >> $GITHUB_STEP_SUMMARY
+
