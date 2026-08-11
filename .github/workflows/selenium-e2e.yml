@@ -77,7 +77,7 @@ jobs:
 
       # ── Stage 8: Install Frontend Dependencies ────────────────────────────
       - name: Install Frontend Dependencies
-        run: npm ci
+        run: npm install
         working-directory: frontend
 
       # ── Stage 9: Build & Start Frontend ───────────────────────────────────
@@ -94,7 +94,7 @@ jobs:
 
       # ── Stage 10: Install Selenium Dependencies ───────────────────────────
       - name: Install Selenium Test Dependencies
-        run: npm ci
+        run: npm install
         working-directory: testing/selenium
 
       # ── Stage 11: Register Test User ──────────────────────────────────────

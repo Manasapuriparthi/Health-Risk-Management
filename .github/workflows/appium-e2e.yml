@@ -116,7 +116,7 @@ jobs:
 
       # ── Stage 9: Install Test Dependencies ───────────────────────────────
       - name: Install Appium Test Dependencies
-        run: npm ci
+        run: npm install
         working-directory: testing/appium
 
       # ── Stage 10: Run Appium Tests ────────────────────────────────────────

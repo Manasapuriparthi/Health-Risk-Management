@@ -25,6 +25,14 @@ jobs:
       - name: Setup Python & Start Backend
         run: |
           pip install -r backend/requirements.txt
+
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: '7.0'
+
+      - name: Start FastAPI Backend
+        run: |
           cd backend
           uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 8
