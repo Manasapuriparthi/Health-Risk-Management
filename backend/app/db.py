@@ -3,9 +3,19 @@ from passlib.context import CryptContext
 from datetime import datetime
 from .config import settings
 
-# Initialize AsyncIOMotorClient
-client = AsyncIOMotorClient(settings.MONGODB_URI)
+# Initialize AsyncIOMotorClient with cloud-safe defaults
+_mongo_opts = {}
+if settings.MONGODB_URI.startswith("mongodb+srv://"):
+    _mongo_opts["tls"] = True
+    _mongo_opts["tlsAllowInvalidCertificates"] = False
+
+client = AsyncIOMotorClient(
+    settings.MONGODB_URI,
+    serverSelectionTimeoutMS=10000,
+    **_mongo_opts
+)
 db = client[settings.DB_NAME]
+print(f"MongoDB target: {settings.DB_NAME} @ {'Atlas (SRV)' if 'srv' in settings.MONGODB_URI else 'localhost'}")
 
 # Collections
 users_collection = db["users"]

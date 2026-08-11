@@ -12,8 +12,7 @@ import HealthNews from './pages/HealthNews';
 import Reminders from './pages/Reminders';
 import ProfileSettings from './pages/ProfileSettings';
 import DoctorDashboard from './pages/DoctorDashboard';
-
-const API_BASE = 'http://localhost:8000/api';
+import { API_BASE_URL as API_BASE } from './config';
 
 export default function App() {
   const [onboarded, setOnboarded] = useState(localStorage.getItem('onboarded') === 'true');

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import os
 
 from .db import check_db_health, seed_database
 from .ml_models import train_models
@@ -28,10 +29,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS - reads from CORS_ORIGINS env var (comma-separated) or allows all for local dev
+_cors_env = os.getenv("CORS_ORIGINS", "*")
+cors_origins = [o.strip() for o in _cors_env.split(",")] if _cors_env != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For dev, allow all. In production, restrict.
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
