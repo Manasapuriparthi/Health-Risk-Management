@@ -55,24 +55,33 @@ export default function Predictor({ token, API_BASE, latestVital, user }) {
     };
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 sec timeout
+
       const res = await fetch(`${API_BASE}/prediction/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
         setResult(data);
       } else {
         const errData = await res.json();
-        setError(errData.detail || 'Prediction failed. Verify parameters.');
+        setError(errData.detail || 'Prediction failed. Please verify your input values.');
       }
     } catch (err) {
-      setError('Connection to backend server failed.');
+      if (err.name === 'AbortError') {
+        setError('The server is still warming up (this takes ~60 seconds on first use). Please wait a moment and try again.');
+      } else {
+        setError('Connection to backend server failed. Please check your internet connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -136,8 +145,8 @@ export default function Predictor({ token, API_BASE, latestVital, user }) {
                 <input type="number" className="form-control" value={age} onChange={e=>setAge(e.target.value)} required />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>BMI</label>
-                <input type="number" step="0.1" className="form-control" placeholder="e.g. 24.5" value={bmi} onChange={e=>setBmi(e.target.value)} required />
+                <label>BMI <span style={{fontSize:'0.75rem', color:'var(--text-muted)', fontWeight:'400'}}>(auto-calc if blank)</span></label>
+                <input type="number" step="0.1" className="form-control" placeholder="e.g. 24.5" value={bmi} onChange={e=>setBmi(e.target.value)} />
               </div>
             </div>
 
@@ -186,7 +195,15 @@ export default function Predictor({ token, API_BASE, latestVital, user }) {
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '14px', marginTop: '12px' }}>
-              {loading ? 'Evaluating Algorithms...' : 'Calculate Health Risks'}
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ animation: 'spin 1s linear infinite' }}>
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  </svg>
+                  Evaluating... (may take ~60s on first use)
+                </span>
+              ) : 'Calculate Health Risks'}
             </button>
           </form>
         </div>

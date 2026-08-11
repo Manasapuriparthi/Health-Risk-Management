@@ -78,11 +78,15 @@ export default function ReportAnalyzer({ token, API_BASE, onReportProcessed }) {
     const formData = new FormData();
     formData.append('file', file);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
       const res = await fetch(`${API_BASE}/report/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
-        body: formData
+        body: formData,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (res.ok) {
         setResult(data);
@@ -100,8 +104,12 @@ export default function ReportAnalyzer({ token, API_BASE, onReportProcessed }) {
       } else {
         setError(data.detail || 'Failed to parse report.');
       }
-    } catch (_) {
-      setError('Connection to backend failed.');
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setError('Server is warming up (~60s on first use). Please wait and try again.');
+      } else {
+        setError('Connection to backend failed.');
+      }
     } finally {
       setLoading(false);
     }
@@ -117,11 +125,15 @@ export default function ReportAnalyzer({ token, API_BASE, onReportProcessed }) {
     const payload = { source_label: sourceLabel || 'Manual Entry' };
     filled.forEach(([k, v]) => { payload[k] = parseFloat(v); });
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
       const res = await fetch(`${API_BASE}/report/manual`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (res.ok) {
         setResult(data);
@@ -131,8 +143,12 @@ export default function ReportAnalyzer({ token, API_BASE, onReportProcessed }) {
       } else {
         setError(data.detail || 'Failed to save report.');
       }
-    } catch (_) {
-      setError('Connection to backend failed.');
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setError('Server is warming up (~60s on first use). Please wait and try again.');
+      } else {
+        setError('Connection to backend failed.');
+      }
     } finally {
       setLoading(false);
     }
