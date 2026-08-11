@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const INITIAL_ALLERGIES = ['Peanuts', 'Gluten', 'Dust', 'Penicillin'];
 
@@ -6,11 +6,18 @@ export default function ProfileSettings({ user, token, API_BASE }) {
   const [subTab, setSubTab] = useState('personal'); // 'personal', 'history', 'allergies', 'contacts', 'settings'
 
   // Personal Info Form States
-  const [fullName, setFullName] = useState(user?.username || 'John Doe');
-  const [email, setEmail] = useState(user?.email || 'johndoe@example.com');
+  const [fullName, setFullName] = useState(user?.username || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('+91 98765 43210');
   const [dob, setDob] = useState('1999-08-15');
   const [gender, setGender] = useState('Male');
+
+  useEffect(() => {
+    if (user) {
+      if (user.username) setFullName(user.username);
+      if (user.email) setEmail(user.email);
+    }
+  }, [user]);
 
   // Medical History State
   const [history, setHistory] = useState({
