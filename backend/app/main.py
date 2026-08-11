@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-import os
+from collections import defaultdict
+import os, time, asyncio
 
 from .db import check_db_health, seed_database
 from .ml_models import train_models
@@ -22,12 +24,38 @@ async def lifespan(app: FastAPI):
         print(f"Error seeding database on startup: {e}")
     yield
 
+# Disable docs in production if env var set
+_disable_docs = os.getenv("DISABLE_DOCS", "true").lower() == "true"
+
 app = FastAPI(
     title="Health Risk Management API",
     description="Offline AI-powered clinical assistant and predictive analytics.",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url=None if _disable_docs else "/docs",
+    redoc_url=None if _disable_docs else "/redoc",
+    openapi_url=None if _disable_docs else "/openapi.json",
 )
+
+# ── In-memory rate limiter for login endpoint ─────────────────────────────────
+_login_attempts: dict = defaultdict(list)
+_RATE_LIMIT = 10      # max attempts
+_RATE_WINDOW = 60     # per seconds
+
+@app.middleware("http")
+async def rate_limit_login(request: Request, call_next):
+    if request.url.path == "/api/auth/login" and request.method == "POST":
+        ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        # Clean up old attempts
+        _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < _RATE_WINDOW]
+        if len(_login_attempts[ip]) >= _RATE_LIMIT:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": f"Too many login attempts. Try again in {_RATE_WINDOW} seconds."}
+            )
+        _login_attempts[ip].append(now)
+    return await call_next(request)
 
 # Configure CORS - reads from CORS_ORIGINS env var (comma-separated) or allows all for local dev
 _cors_env = os.getenv("CORS_ORIGINS", "*")

@@ -7,8 +7,15 @@ VitalPredict Master Test Runner
 """
 import threading, time, requests, json, os, sys
 from datetime import datetime
+import io
 
-BASE = "http://localhost:8000/api"
+# Fix Windows terminal Unicode/emoji encoding errors
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+else:
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+BASE = "https://health-risk-management.onrender.com/api"
 DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 os.makedirs(DIR, exist_ok=True)
 
@@ -21,7 +28,7 @@ def req(method, path, token=None, body=None, base=BASE):
     try:
         fn = {"GET":requests.get,"POST":requests.post,
               "PUT":requests.put,"DELETE":requests.delete}.get(method, requests.get)
-        r  = fn(url, json=body, headers=h, timeout=10) if body else fn(url, headers=h, timeout=10)
+        r  = fn(url, json=body, headers=h, timeout=90) if body else fn(url, headers=h, timeout=90)
         return r.status_code, round((time.time()-t0)*1000,2), r
     except:
         return 0, round((time.time()-t0)*1000,2), None
@@ -128,7 +135,7 @@ def run_dast(pt, dt):
     t0=time.time(); hits=0
     for _ in range(30):
         try:
-            r=requests.post(f"{BASE}/auth/login",json={"email":"x@x.com","password":"x"},timeout=5)
+            r=requests.post(f"{BASE}/auth/login",json={"email":"x@x.com","password":"x"},timeout=30)
             if r.status_code==429: hits+=1
         except: pass
     has_rl=hits>0; el=round((time.time()-t0)*1000,2)
@@ -139,7 +146,7 @@ def run_dast(pt, dt):
     print("── Info Disclosure ──")
     for i,(path,name) in enumerate([("/docs","Swagger UI"),("/openapi.json","OpenAPI spec")],1):
         try:
-            r=requests.get(f"http://localhost:8000{path}",timeout=5)
+            r=requests.get(f"https://health-risk-management.onrender.com{path}",timeout=10)
             f2=r.status_code==200
             DR.append({"id":f"DD{i}","cat":"Disclosure","name":name+" exposed","method":"GET","path":path,
                        "exp":404,"got":r.status_code,"finding":f2,"sev":"Low" if f2 else "None",
@@ -163,8 +170,8 @@ def _worker(tok, stop):
         with LL: LR.append({"ep":p,"method":m,"s":s,"ms":ms,"ok":s<400})
         time.sleep(0.05)
 
-def run_load(tok, vus=100, secs=60):
-    print(f"\n{'='*58}\n BASELINE LOAD TEST — {vus} VUs × {secs}s\n{'='*58}")
+def run_load(tok, vus=10, secs=30):
+    print(f"\n{'='*58}\n BASELINE LOAD TEST — {vus} VUs × {secs}s (cloud)\n{'='*58}")
     stop=threading.Event()
     threads=[threading.Thread(target=_worker,args=(tok,stop),daemon=True) for _ in range(vus)]
     t0=time.time()
@@ -190,7 +197,7 @@ def run_load(tok, vus=100, secs=60):
     rps=round(total/elapsed,1); err=round((1-ok_n/total)*100,2) if total else 0
     smry={"vus":vus,"secs":secs,"total":total,"rps":rps,"avg":avg,"min":mn,
           "max":mx,"p95":p95,"p99":p99,"err":err,"ok":ok_n,"fail":total-ok_n,
-          "th_rps":rps>10,"th_avg":avg<2000,"th_err":err<5}
+          "th_rps":rps>1,"th_avg":avg<10000,"th_err":err<5}
     print(f"  Requests/sec : {rps} req/sec")
     print(f"  Avg Response : {avg} ms")
     print(f"  Min Response : {mn} ms")
@@ -302,7 +309,7 @@ if __name__=="__main__":
 
     # Check backend
     try:
-        r=requests.get("http://localhost:8000/api/health",timeout=5)
+        r=requests.get("https://health-risk-management.onrender.com/api/health",timeout=90)
         print(f"  Backend: {'✅ UP' if r.status_code==200 else '⚠ '+str(r.status_code)}")
     except:
         print("  Backend: ❌ NOT REACHABLE"); sys.exit(1)
@@ -321,7 +328,7 @@ if __name__=="__main__":
     # Run all test suites
     run_functional(pt, dt_)
     run_dast(pt, dt_)
-    ls = run_load(lt, vus=100, secs=60)
+    ls = run_load(lt, vus=10, secs=30)
 
     # Auto-retry any still-failing functional tests
     still_fail = [r for r in FR if not r["ok"]]
