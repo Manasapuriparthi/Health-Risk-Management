@@ -607,15 +607,117 @@ span[style*="text-transform: uppercase"] {
 .justify-between { justify-content: space-between; }
 
 /* ═══════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — TABLET (≤1024px)
 ═══════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   h1 { font-size: 1.8rem; }
   .glass-panel { padding: 18px; }
 }
 
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  /* Layout */
   .form-row { grid-template-columns: 1fr; }
   h1 { font-size: 1.5rem; }
-  aside { display: none; }
+
+  /* App shell — hide sidebar, show top bar */
+  .app-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr !important;
+  }
+
+  aside, .sidebar {
+    display: none !important;
+  }
+
+  /* Main content gets full width */
+  .main-content {
+    padding: 12px !important;
+    width: 100% !important;
+  }
+
+  /* Cards stack vertically */
+  .stats-grid, .vitals-grid, .cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Glass panels */
+  .glass-panel {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Dashboard top bar */
+  .top-bar {
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+
+  /* Form inputs */
+  input, select, textarea {
+    font-size: 16px !important; /* prevents iOS zoom */
+  }
+
+  /* Buttons */
+  .btn, button[type="submit"] {
+    width: 100% !important;
+  }
+
+  /* Profile settings layout */
+  [style*="grid-template-columns: 240px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table overflow */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Modal */
+  .modal-overlay > div {
+    margin: 16px !important;
+    width: calc(100% - 32px) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Health score gauge */
+  .health-gauge {
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  /* Appointment cards */
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (≤480px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.1rem; }
+  h3 { font-size: 1rem; }
+
+  .glass-panel { padding: 12px !important; }
+
+  /* Auth form */
+  .auth-container {
+    padding: 16px !important;
+    margin: 8px !important;
+  }
+
+  /* Signed-in footer bar */
+  .signed-in-bar {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
 }

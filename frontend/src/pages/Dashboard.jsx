@@ -247,7 +247,7 @@ export default function Dashboard({ token, API_BASE, latestVital, onVitalLogged 
         <p className="subtitle">Track daily vitals, check clinical thresholds, and visualize history.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 360px) 1fr', gap: '32px' }}>
         {/* Left Column: Form */}
         <div className="glass-panel" style={{ height: 'fit-content' }}>
           <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>

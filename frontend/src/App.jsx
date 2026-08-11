@@ -22,6 +22,14 @@ export default function App() {
   const [latestVital, setLatestVital] = useState(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
 
+  // Keep Render backend warm - ping every 14 minutes to prevent cold starts
+  useEffect(() => {
+    const keepAlive = () => fetch(`${API_BASE}/health`).catch(() => {});
+    keepAlive(); // ping immediately on load
+    const interval = setInterval(keepAlive, 14 * 60 * 1000); // every 14 mins
+    return () => clearInterval(interval);
+  }, []);
+
   // Sync token to localstorage
   useEffect(() => {
     if (token) {
