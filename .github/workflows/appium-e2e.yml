@@ -69,15 +69,12 @@ jobs:
         run: flutter build apk --debug --dart-define=API_BASE=http://10.0.2.2:8000/api
         working-directory: mobile
 
-      # ── Stage 7: Setup Appium Server ───────────────────────────────────────
-      - name: Install Appium Server & Drivers
+      # ── Stage 7: Setup Local Appium & Driver ──────────────────────────────
+      - name: Install Appium & Local Test Dependencies
         run: |
-          npm install -g appium@2.5.4
-          appium driver install uiautomator2
-          echo "✅ Appium installed"
-
-      - name: Install Appium Test Dependencies
-        run: npm install
+          npm install
+          npx appium driver install uiautomator2 || true
+          echo "✅ Appium and UiAutomator2 driver installed"
         working-directory: testing/appium
 
       # ── Stage 8: Run Appium Tests on Hardware Accelerated Android Emulator ──
@@ -94,8 +91,6 @@ jobs:
             echo "=========================================="
             java -version
             node --version
-            appium --version
-            appium driver list
             adb version
             adb devices
 
@@ -130,17 +125,19 @@ jobs:
             echo "✅ APK Installed successfully!"
 
             echo "=========================================="
-            echo "🌐 STARTING APPIUM SERVER"
+            echo "🌐 STARTING LOCAL APPIUM SERVER"
             echo "=========================================="
-            nohup appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
-            sleep 6
+            cd testing/appium
+            npx appium --version
+            npx appium driver list
+            nohup npx appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
+            sleep 8
             curl -f http://127.0.0.1:4723/status || (cat appium-server.out && exit 1)
-            echo "✅ Appium Server ready on 127.0.0.1:4723"
+            echo "✅ Local Appium Server ready on 127.0.0.1:4723"
 
             echo "=========================================="
             echo "🧪 RUNNING APPIUM E2E TESTS"
             echo "=========================================="
-            cd testing/appium
             export APK_PATH="$APK_PATH"
             export APPIUM_HOST="127.0.0.1"
             export APPIUM_PORT="4723"
@@ -162,7 +159,9 @@ jobs:
         run: |
           mkdir -p testing/appium/logs
           adb logcat -d > "testing/appium/logs/device.log" 2>&1 || true
-          cat appium-server.log > "testing/appium/logs/appium.log" 2>&1 || true
+          if [ -f "testing/appium/appium-server.log" ]; then
+            cat "testing/appium/appium-server.log" > "testing/appium/logs/appium.log" 2>&1 || true
+          fi
 
       # ── Stage 11: Upload Artifacts ─────────────────────────────────────────
       - name: Upload Appium Test Artifacts

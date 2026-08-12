@@ -13,6 +13,7 @@
     "webdriverio": "^8.36.1",
     "@wdio/appium-service": "^8.36.1",
     "appium": "^2.5.4",
+    "appium-uiautomator2-driver": "^3.7.0",
     "exceljs": "^4.4.0",
     "fs-extra": "^11.2.0",
     "uuid": "^9.0.0"
