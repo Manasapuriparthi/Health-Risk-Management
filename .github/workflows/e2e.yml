@@ -147,6 +147,24 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Excel Generator Dependencies
+        run: pip install openpyxl
+
+      - name: Generate Master 1800 Test Cases Excel Report
+        run: python generate_master_1800_excel.py
+
+      - name: Upload Master Excel Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VitalPredict_Master_1800_Test_Cases_Report
+          path: testing/results/VitalPredict_Master_1800_Test_Cases_Report.xlsx
+          retention-days: 30
+
       - name: Compile 1800 Test Cases Master Executive Report
         run: |
           mkdir -p testing/results/Summary
