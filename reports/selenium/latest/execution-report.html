@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VitalPredict — Selenium E2E Execution Report</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0f1e;color:#f1f5f9;line-height:1.5}
+  header{background:linear-gradient(135deg,#10b981,#059669);padding:32px 40px;display:flex;justify-content:space-between;align-items:center}
+  header h1{font-size:1.8rem;font-weight:800;color:#fff}
+  header .meta{font-size:0.85rem;color:rgba(255,255,255,0.85);text-align:right}
+  .container{max-width:1400px;margin:0 auto;padding:32px 24px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px}
+  .card{background:#111827;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.07)}
+  .card .label{font-size:0.78rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+  .card .value{font-size:2rem;font-weight:800}
+  .card.pass .value{color:#10b981}
+  .card.fail .value{color:#ef4444}
+  .card.skip .value{color:#f59e0b}
+  .card.total .value{color:#6366f1}
+  .card.rate .value{color:#dc2626}
+  .section{background:#111827;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.07)}
+  .section h2{font-size:1.1rem;font-weight:700;margin-bottom:16px;color:#f1f5f9;border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:10px}
+  table{width:100%;border-collapse:collapse;font-size:0.83rem}
+  th{background:#0a0f1e;color:#94a3b8;padding:10px 12px;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em}
+  td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+  tr:hover td{background:rgba(255,255,255,0.02)}
+  .badge{padding:2px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;text-transform:uppercase}
+  .badge-high{background:rgba(239,68,68,0.15);color:#ef4444}
+  .badge-medium{background:rgba(245,158,11,0.15);color:#f59e0b}
+  .badge-low{background:rgba(16,185,129,0.15);color:#10b981}
+  .badge-critical{background:rgba(124,58,237,0.15);color:#7c3aed}
+  .progress-bar{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-top:8px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#10b981,#059669);border-radius:4px}
+  footer{text-align:center;padding:24px;color:#64748b;font-size:0.8rem;border-top:1px solid rgba(255,255,255,0.07)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🧪 Selenium E2E Test Report</h1>
+    <div style="color:rgba(255,255,255,0.8);margin-top:4px;font-size:0.9rem">VitalPredict Web Application</div>
+  </div>
+  <div class="meta">
+    <div><strong>Build:</strong> 33</div>
+    <div><strong>Environment:</strong> ci</div>
+    <div><strong>URL:</strong> http://localhost:5173</div>
+    <div><strong>Date:</strong> 8/12/2026, 3:32:42 AM</div>
+    <div><strong>Duration:</strong> 0.0s</div>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Summary Cards -->
+  <div class="cards">
+    <div class="card total"><div class="label">Total</div><div class="value">40</div></div>
+    <div class="card pass"><div class="label">Passed</div><div class="value">12</div></div>
+    <div class="card fail"><div class="label">Failed</div><div class="value">28</div></div>
+    <div class="card skip"><div class="label">Skipped</div><div class="value">0</div></div>
+    <div class="card rate"><div class="label">Pass Rate</div><div class="value">30.00%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:30.00%"></div></div>
+    </div>
+  </div>
+
+  <!-- Module Summary -->
+  <div class="section">
+    <h2>📊 Module Summary</h2>
+    <table>
+      <thead><tr><th>Module</th><th>Total</th><th>Passed</th><th>Failed</th><th>Pass Rate</th></tr></thead>
+      <tbody><tr><td>Authentication</td><td>35</td>
+      <td style="color:#16a34a;font-weight:bold">12</td>
+      <td style="color:#dc2626;font-weight:bold">23</td>
+      <td style="color:#dc2626;font-weight:bold">34.3%</td></tr><tr><td>Authorization</td><td>4</td>
+      <td style="color:#16a34a;font-weight:bold">0</td>
+      <td style="color:#dc2626;font-weight:bold">4</td>
+      <td style="color:#dc2626;font-weight:bold">0.0%</td></tr><tr><td>Session Management</td><td>1</td>
+      <td style="color:#16a34a;font-weight:bold">0</td>
+      <td style="color:#dc2626;font-weight:bold">1</td>
+      <td style="color:#dc2626;font-weight:bold">0.0%</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- All Test Cases -->
+  <div class="section">
+    <h2>🧾 Test Execution Details</h2>
+    <table>
+      <thead><tr><th>Test ID</th><th>Module</th><th>Test Name</th><th>Priority</th><th>Status</th><th>Duration</th><th>Failure Reason</th><th>Screenshot</th></tr></thead>
+      <tbody><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_001</td>
+      <td>Authentication</td>
+      <td>Page loads with login form visible</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>81ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_002</td>
+      <td>Authentication</td>
+      <td>Email input field is present</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10162ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(css selector, input[type="email"],input[placeholder*="email" i])
+Wait timed out after 10051ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_002_2026-08-12T03-24-58-666Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_003</td>
+      <td>Authentication</td>
+      <td>Password input field is present</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10121ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="password"]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_003_2026-08-12T03-25-08-806Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_004</td>
+      <td>Authentication</td>
+      <td>Sign In button is present</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10118ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Sign In") or contains(text(),"Login")])
+Wait timed out after 10033ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_004_2026-08-12T03-25-18-948Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_005</td>
+      <td>Authentication</td>
+      <td>Patient tab is visible</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10099ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"xpath","selector":"//button[contains(text(),"Patient")]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_005_2026-08-12T03-25-29-053Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_006</td>
+      <td>Authentication</td>
+      <td>Doctor tab is visible</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10100ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"xpath","selector":"//button[contains(text(),"Doctor")]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_006_2026-08-12T03-25-39-154Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_007</td>
+      <td>Authentication</td>
+      <td>Create account link is visible</td>
+      <td><span class="badge badge-low">Low</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10132ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //*[contains(text(),"Create one") or contains(text(),"account")])
+Wait timed out after 10036ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_007_2026-08-12T03-25-49-273Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_008</td>
+      <td>Authentication</td>
+      <td>Login with empty credentials shows error</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10198ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"xpath","selector":"//button[contains(text(),"Sign In") or contains(text(),"Login")]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_008_2026-08-12T03-25-59-485Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_009</td>
+      <td>Authentication</td>
+      <td>Login with wrong password shows error</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20378ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(css selector, input[type="email"], input[placeholder*="email" i])
+Wait timed out after 20255ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_009_2026-08-12T03-26-19-865Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_010</td>
+      <td>Authentication</td>
+      <td>Login with invalid email format is rejected</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10149ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="email"],input[placeholder*="email" i]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_010_2026-08-12T03-26-30-014Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_011</td>
+      <td>Authentication</td>
+      <td>Valid patient login redirects to dashboard</td>
+      <td><span class="badge badge-critical">Critical</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20366ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(css selector, input[type="email"], input[placeholder*="email" i])
+Wait timed out after 20233ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_011_2026-08-12T03-26-50-369Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_012</td>
+      <td>Authentication</td>
+      <td>Sidebar is visible after login</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10098ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_012_2026-08-12T03-27-00-474Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_013</td>
+      <td>Authentication</td>
+      <td>Dashboard heading visible after login</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>29ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_014</td>
+      <td>Authentication</td>
+      <td>Logout button visible</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10119ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Sign Out") or contains(text(),"Log Out")])
+Wait timed out after 10025ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_014_2026-08-12T03-27-10-619Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_015</td>
+      <td>Authentication</td>
+      <td>Logout redirects to login page</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20332ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Sign Out")])
+Wait timed out after 20240ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_015_2026-08-12T03-27-30-954Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_016</td>
+      <td>Authentication</td>
+      <td>Re-login after logout succeeds</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20348ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(css selector, input[type="email"], input[placeholder*="email" i])
+Wait timed out after 20222ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_016_2026-08-12T03-27-51-307Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_017</td>
+      <td>Authentication</td>
+      <td>Navigation to signup page works</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20366ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Sign Out")])
+Wait timed out after 20243ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_017_2026-08-12T03-28-11-668Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_018</td>
+      <td>Authentication</td>
+      <td>Signup form renders correctly</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10098ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 3
+Received:    0</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_018_2026-08-12T03-28-21-773Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_019</td>
+      <td>Authentication</td>
+      <td>Signup with empty fields rejected</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10131ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"xpath","selector":"//button[contains(text(),"Register") or contains(text(),"Create")]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_019_2026-08-12T03-28-31-910Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_020</td>
+      <td>Authentication</td>
+      <td>Signup with duplicate email shows error</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>40181ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"xpath","selector":"//button[contains(text(),"Register") or contains(text(),"Create")]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_020_2026-08-12T03-29-12-090Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_021</td>
+      <td>Authentication</td>
+      <td>SQL injection in email field</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10149ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="email"],input[placeholder*="email" i]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_021_2026-08-12T03-29-22-231Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_022</td>
+      <td>Authentication</td>
+      <td>XSS payload in email field</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10131ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="email"],input[placeholder*="email" i]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_022_2026-08-12T03-29-32-373Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_023</td>
+      <td>Authentication</td>
+      <td>Whitespace-only email rejected</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10134ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="email"],input[placeholder*="email" i]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_023_2026-08-12T03-29-42-499Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_024</td>
+      <td>Authentication</td>
+      <td>Very long email rejected</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10163ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="email"],input[placeholder*="email" i]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_024_2026-08-12T03-29-52-662Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_025</td>
+      <td>Authentication</td>
+      <td>Password with only spaces rejected</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10167ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"css selector","selector":"input[type="email"],input[placeholder*="email" i]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_025_2026-08-12T03-30-02-844Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_026</td>
+      <td>Authorization</td>
+      <td>Doctor tab switches portal</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10179ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Doctor")])
+Wait timed out after 10055ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_026_2026-08-12T03-30-13-022Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_027</td>
+      <td>Authorization</td>
+      <td>Valid doctor login works</td>
+      <td><span class="badge badge-critical">Critical</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10149ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Doctor")])
+Wait timed out after 10015ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_027_2026-08-12T03-30-23-170Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_028</td>
+      <td>Authorization</td>
+      <td>Doctor sees Clinical Hub after login</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>10115ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">no such element: Unable to locate element: {"method":"xpath","selector":"//*[contains(text(),"Clinical Hub") or contains(text(),"Dashboard")]"}
+  (Session info: chrome=150.0.7871.128)</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_028_2026-08-12T03-30-33-289Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_029</td>
+      <td>Authorization</td>
+      <td>Doctor logout works</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20348ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(xpath, //button[contains(text(),"Sign Out")])
+Wait timed out after 20264ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_029_2026-08-12T03-30-53-635Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_030</td>
+      <td>Session Management</td>
+      <td>Session persists on page reload</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#dc2626;font-weight:bold">FAIL</span></td>
+      <td>20399ms</td>
+      <td><span style="color:#dc2626;font-size:0.8rem">Waiting for element to be located By(css selector, input[type="email"], input[placeholder*="email" i])
+Wait timed out after 20269ms</span></td>
+      <td><a href="../screenshots/FAIL_TC_AUTH_030_2026-08-12T03-31-14-030Z.png" target="_blank">📷</a></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_031</td>
+      <td>Authentication</td>
+      <td>Forgot password link visible on login page</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>57ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_032</td>
+      <td>Authentication</td>
+      <td>Login page has proper heading text</td>
+      <td><span class="badge badge-low">Low</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>47ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_033</td>
+      <td>Authentication</td>
+      <td>Login form is accessible via keyboard</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>38ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_034</td>
+      <td>Authentication</td>
+      <td>Password field masks input</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>44ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_035</td>
+      <td>Authentication</td>
+      <td>Error message disappears on input change</td>
+      <td><span class="badge badge-low">Low</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>52ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_036</td>
+      <td>Authentication</td>
+      <td>Login with correct email wrong password fails</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>39ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_037</td>
+      <td>Authentication</td>
+      <td>Signup back button returns to login</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>47ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_038</td>
+      <td>Authentication</td>
+      <td>Token stored after successful login</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>41ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_039</td>
+      <td>Authentication</td>
+      <td>Accessing protected route without login redirects to auth</td>
+      <td><span class="badge badge-high">High</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>50ms</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="font-family:monospace;font-size:0.8rem">TC_AUTH_040</td>
+      <td>Authentication</td>
+      <td>Multiple failed logins do not crash app</td>
+      <td><span class="badge badge-medium">Medium</span></td>
+      <td><span style="color:#16a34a;font-weight:bold">PASS</span></td>
+      <td>37ms</td>
+      <td></td>
+      <td></td>
+    </tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Generated by VitalPredict QA Automation Framework • 2026-08-12T03:32:42.845Z</footer>
+</body></html>
