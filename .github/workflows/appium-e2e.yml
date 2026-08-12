@@ -82,12 +82,14 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          target: default
-          arch: x86
+          target: google_apis
+          arch: x86_64
+          profile: pixel
           disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: |
             echo "=========================================="
-            echo "🔍 ENVIRONMENT & SYSTEM DIAGNOSTICS"
+            echo "🔍 ENVIRONMENT DIAGNOSTICS"
             echo "=========================================="
             java -version
             node --version
@@ -121,14 +123,14 @@ jobs:
             echo "=========================================="
             echo "🚀 INSTALLING APK ON EMULATOR"
             echo "=========================================="
-            adb install -r "$APK_PATH"
+            adb install -r -g "$APK_PATH"
             echo "✅ APK Installed successfully!"
 
             echo "=========================================="
             echo "🌐 STARTING LOCAL APPIUM SERVER"
             echo "=========================================="
             cd testing/appium
-            npx appium --version
+            npx appium driver install uiautomator2 || true
             npx appium driver list
             nohup npx appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
             sleep 8
