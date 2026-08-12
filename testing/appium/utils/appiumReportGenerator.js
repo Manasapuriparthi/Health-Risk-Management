@@ -1,70 +1,79 @@
-'use strict';
-
-const ExcelJS = require('exceljs');
-const fs = require('fs-extra');
+let ExcelJS;
+try { ExcelJS = require('exceljs'); } catch (_) { ExcelJS = null; }
+const fs = require('fs');
 const path = require('path');
 const config = require('../config/appium.config');
 
+function ensureDirSync(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+}
+
 async function generateAppiumReports(summary) {
-  await fs.ensureDir(path.join(config.REPORT_DIR, 'Excel'));
-  await fs.ensureDir(path.join(config.REPORT_DIR, 'HTML'));
-  await fs.ensureDir(path.join(config.REPORT_DIR, 'JSON'));
-  await fs.ensureDir(path.join(config.REPORT_DIR, 'Summary'));
+  ensureDirSync(path.join(config.REPORT_DIR, 'Excel'));
+  ensureDirSync(path.join(config.REPORT_DIR, 'HTML'));
+  ensureDirSync(path.join(config.REPORT_DIR, 'JSON'));
+  ensureDirSync(path.join(config.REPORT_DIR, 'Summary'));
 
-  // Excel
-  const wb = new ExcelJS.Workbook();
-  wb.creator = 'VitalPredict Appium QA';
-  wb.title = 'Appium Android E2E Report';
+  // Excel (if ExcelJS installed)
+  if (ExcelJS) {
+    try {
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'VitalPredict Appium QA';
+      wb.title = 'Appium Android E2E Report';
 
-  const sheets = [
-    ['All Test Cases', summary.results],
-    ['Passed Tests', summary.results.filter(r => r.status === 'PASS')],
-    ['Failed Tests', summary.results.filter(r => r.status === 'FAIL')],
-    ['Skipped Tests', summary.results.filter(r => r.status === 'SKIP')],
-    ['Blocked Tests', summary.results.filter(r => r.status === 'BLOCK')],
-  ];
+      const sheets = [
+        ['All Test Cases', summary.results],
+        ['Passed Tests', summary.results.filter(r => r.status === 'PASS')],
+        ['Failed Tests', summary.results.filter(r => r.status === 'FAIL')],
+        ['Skipped Tests', summary.results.filter(r => r.status === 'SKIP')],
+        ['Blocked Tests', summary.results.filter(r => r.status === 'BLOCK')],
+      ];
 
-  const cols = [
-    { header: 'Test ID',   key: 'testId',   width: 22 },
-    { header: 'Module',    key: 'module',   width: 22 },
-    { header: 'Test Name', key: 'name',     width: 50 },
-    { header: 'Priority',  key: 'priority', width: 12 },
-    { header: 'Status',    key: 'status',   width: 10 },
-    { header: 'Duration',  key: 'duration', width: 14 },
-    { header: 'Reason',    key: 'reason',   width: 40 },
-    { header: 'Screenshot',key: 'screenshot',width: 30 },
-  ];
+      const cols = [
+        { header: 'Test ID',   key: 'testId',   width: 22 },
+        { header: 'Module',    key: 'module',   width: 22 },
+        { header: 'Test Name', key: 'name',     width: 50 },
+        { header: 'Priority',  key: 'priority', width: 12 },
+        { header: 'Status',    key: 'status',   width: 10 },
+        { header: 'Duration',  key: 'duration', width: 14 },
+        { header: 'Reason',    key: 'reason',   width: 40 },
+        { header: 'Screenshot',key: 'screenshot',width: 30 },
+      ];
 
-  sheets.forEach(([sheetName, data]) => {
-    const ws = wb.addWorksheet(sheetName);
-    ws.columns = cols;
-    const hRow = ws.getRow(1);
-    hRow.eachCell(c => {
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0A0F1E' } };
-      c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      c.alignment = { horizontal: 'center', vertical: 'middle' };
-    });
-    data.forEach(r => ws.addRow(r));
-  });
+      sheets.forEach(([sheetName, data]) => {
+        const ws = wb.addWorksheet(sheetName);
+        ws.columns = cols;
+        const hRow = ws.getRow(1);
+        hRow.eachCell(c => {
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0A0F1E' } };
+          c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          c.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+        data.forEach(r => ws.addRow(r));
+      });
 
-  // Metrics sheet
-  const mws = wb.addWorksheet('Execution Metrics');
-  mws.columns = [{ header: 'Metric', key: 'm', width: 30 }, { header: 'Value', key: 'v', width: 20 }];
-  [
-    ['Build Number', config.BUILD_NUMBER],
-    ['Platform', 'Android'],
-    ['Total Tests', summary.total],
-    ['Passed', summary.passed],
-    ['Failed', summary.failed],
-    ['Skipped', summary.skipped],
-    ['Blocked', summary.blocked],
-    ['Pass Rate', `${summary.passRate}%`],
-    ['Duration', `${(summary.totalDuration / 1000).toFixed(1)}s`],
-    ['Date', new Date().toISOString()],
-  ].forEach(([m, v]) => mws.addRow({ m, v }));
+      // Metrics sheet
+      const mws = wb.addWorksheet('Execution Metrics');
+      mws.columns = [{ header: 'Metric', key: 'm', width: 30 }, { header: 'Value', key: 'v', width: 20 }];
+      [
+        ['Build Number', config.BUILD_NUMBER],
+        ['Platform', 'Android'],
+        ['Total Tests', summary.total],
+        ['Passed', summary.passed],
+        ['Failed', summary.failed],
+        ['Skipped', summary.skipped],
+        ['Blocked', summary.blocked],
+        ['Pass Rate', `${summary.passRate}%`],
+        ['Duration', `${(summary.totalDuration / 1000).toFixed(1)}s`],
+        ['Date', new Date().toISOString()],
+      ].forEach(([m, v]) => mws.addRow({ m, v }));
 
-  const excelPath = path.join(config.REPORT_DIR, 'Excel', 'Appium_Test_Report.xlsx');
-  await wb.xlsx.writeFile(excelPath);
+      const excelPath = path.join(config.REPORT_DIR, 'Excel', 'Appium_Test_Report.xlsx');
+      await wb.xlsx.writeFile(excelPath);
+    } catch (_) {}
+  }
 
   // HTML
   const passRate = parseFloat(summary.passRate);
@@ -104,14 +113,14 @@ async function generateAppiumReports(summary) {
   <table><thead><tr><th>Test ID</th><th>Module</th><th>Test Name</th><th>Priority</th><th>Status</th><th>Duration</th><th>Reason</th></tr></thead>
   <tbody>${testRows}</tbody></table></div></body></html>`;
 
-  await fs.writeFile(path.join(config.REPORT_DIR, 'HTML', 'appium-report.html'), html);
+  fs.writeFileSync(path.join(config.REPORT_DIR, 'HTML', 'appium-report.html'), html);
 
   // JSON
-  await fs.writeJSON(path.join(config.REPORT_DIR, 'JSON', 'appium-results.json'), { summary, tests: summary.results }, { spaces: 2 });
+  fs.writeFileSync(path.join(config.REPORT_DIR, 'JSON', 'appium-results.json'), JSON.stringify({ summary, tests: summary.results }, null, 2));
 
   // Markdown
   const md = `# 📱 Appium Android E2E Summary\n\n| Metric | Value |\n|--------|-------|\n| Total | ${summary.total} |\n| Passed | ${summary.passed} |\n| Failed | ${summary.failed} |\n| Pass Rate | ${summary.passRate}% |\n| Duration | ${(summary.totalDuration / 1000).toFixed(1)}s |\n\n${summary.results.filter(r => r.status === 'FAIL').map(r => `- ❌ \`${r.testId}\` — ${r.reason}`).join('\n') || '✅ No failures'}`;
-  await fs.writeFile(path.join(config.REPORT_DIR, 'Summary', 'appium-summary.md'), md);
+  fs.writeFileSync(path.join(config.REPORT_DIR, 'Summary', 'appium-summary.md'), md);
 
   console.log(`✅ Appium reports generated. Total=${summary.total} Passed=${summary.passed} Failed=${summary.failed} Rate=${summary.passRate}%`);
 }
@@ -131,4 +140,3 @@ if (require.main === module) {
 }
 
 module.exports = { generateAppiumReports };
-

@@ -70,37 +70,84 @@ jobs:
         working-directory: mobile
 
       # ── Stage 7: Setup Appium Server ───────────────────────────────────────
-      - name: Install Appium Server
+      - name: Install Appium Server & Drivers
         run: |
           npm install -g appium@2.5.4
           appium driver install uiautomator2
           echo "✅ Appium installed"
-
-      - name: Start Appium Server
-        run: |
-          nohup appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
-          sleep 8
-          curl -f http://localhost:4723/status || echo "Appium status check warning"
-          echo "✅ Appium server started"
 
       - name: Install Appium Test Dependencies
         run: npm install
         working-directory: testing/appium
 
       # ── Stage 8: Run Appium Tests on Hardware Accelerated Android Emulator ──
-      - name: Run Appium Tests on Android Emulator
+      - name: Run Appium E2E Tests inside Android Emulator Environment
         uses: reactivecircus/android-emulator-runner@v2
-        continue-on-error: true
         with:
           api-level: 29
           target: default
           arch: x86
           disable-animations: true
           script: |
-            adb install -r "mobile/build/app/outputs/flutter-apk/app-debug.apk" || echo "APK install step complete"
+            echo "=========================================="
+            echo "🔍 ENVIRONMENT & SYSTEM DIAGNOSTICS"
+            echo "=========================================="
+            java -version
+            node --version
+            appium --version
+            appium driver list
+            adb version
+            adb devices
+
+            echo "=========================================="
+            echo "📦 APK ABSOLUTE PATH VERIFICATION"
+            echo "=========================================="
+            APK_PATH="$(pwd)/mobile/build/app/outputs/flutter-apk/app-debug.apk"
+            echo "APK Target Path: $APK_PATH"
+            if [ ! -f "$APK_PATH" ]; then
+              echo "❌ ERROR: APK file does not exist at $APK_PATH"
+              exit 1
+            fi
+            echo "✅ APK File Found ($(du -h "$APK_PATH" | cut -f1))"
+
+            echo "=========================================="
+            echo "📱 EMULATOR BOOT & READINESS CHECK"
+            echo "=========================================="
+            adb wait-for-device
+            while [ "$(adb shell getprop sys.boot_completed 2>&1 | tr -d '\r')" != "1" ]; do
+              sleep 2
+            done
+            while [ "$(adb shell pm path android 2>&1 | tr -d '\r')" == "" ]; do
+              sleep 2
+            done
+            echo "✅ Android Emulator fully booted and package manager responsive!"
+            adb devices -l
+
+            echo "=========================================="
+            echo "🚀 INSTALLING APK ON EMULATOR"
+            echo "=========================================="
+            adb install -r "$APK_PATH"
+            echo "✅ APK Installed successfully!"
+
+            echo "=========================================="
+            echo "🌐 STARTING APPIUM SERVER"
+            echo "=========================================="
+            nohup appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
+            sleep 6
+            curl -f http://127.0.0.1:4723/status || (cat appium-server.out && exit 1)
+            echo "✅ Appium Server ready on 127.0.0.1:4723"
+
+            echo "=========================================="
+            echo "🧪 RUNNING APPIUM E2E TESTS"
+            echo "=========================================="
             cd testing/appium
-            npm run test:auth || true
-            npm run test:regression || true
+            export APK_PATH="$APK_PATH"
+            export APPIUM_HOST="127.0.0.1"
+            export APPIUM_PORT="4723"
+            export API_BASE="http://10.0.2.2:8000/api"
+
+            npm run test:auth
+            npm run test:regression
 
       # ── Stage 9: Generate Reports ──────────────────────────────────────────
       - name: Generate Appium Reports
@@ -109,8 +156,8 @@ jobs:
         working-directory: testing/appium
         continue-on-error: true
 
-      # ── Stage 10: Capture Device Logs ──────────────────────────────────────
-      - name: Capture Device Logs
+      # ── Stage 10: Capture Device & Appium Logs ────────────────────────────
+      - name: Capture Device & Appium Server Logs
         if: always()
         run: |
           mkdir -p testing/appium/logs
