@@ -74,12 +74,11 @@ jobs:
         run: flutter build apk --debug --dart-define=API_BASE=http://10.0.2.2:8000/api
         working-directory: mobile
 
-      # ── Stage 7: Setup Local Appium & Driver ──────────────────────────────
+      # ── Stage 7: Setup Local Appium Test Dependencies ─────────────────────
       - name: Install Appium & Local Test Dependencies
         run: |
           npm install
-          npx appium driver install uiautomator2@2.45.0 || true
-          echo "✅ Appium and UiAutomator2 driver installed"
+          echo "✅ Local npm dependencies installed"
         working-directory: testing/appium
 
       # ── Stage 8: Run Appium Tests on Hardware Accelerated Android Emulator ──
@@ -135,7 +134,7 @@ jobs:
             echo "🌐 STARTING LOCAL APPIUM SERVER"
             echo "=========================================="
             cd testing/appium
-            npx appium driver install uiautomator2@2.45.0 || true
+            npx appium driver install uiautomator2 || true
             npx appium --version
             npx appium driver list --installed
             nohup npx appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
