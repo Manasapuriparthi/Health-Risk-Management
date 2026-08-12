@@ -4,8 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Production backend on Render
-  static const String baseUrl = 'https://health-risk-management.onrender.com/api';
+  // Production backend on Render, configurable via --dart-define=API_BASE=... for local/CI testing
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE',
+    defaultValue: 'https://health-risk-management.onrender.com/api',
+  );
 
   // Keep-alive timer to prevent Render cold starts
   static Timer? _keepAliveTimer;
