@@ -14,6 +14,10 @@ jobs:
     name: Appium E2E on Android Emulator
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
 
     steps:
       # ── Stage 1: Checkout ──────────────────────────────────────────────────
@@ -88,7 +92,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          target: default
+          target: google_apis
           arch: x86_64
           profile: pixel_6
           disable-animations: true
@@ -129,6 +133,7 @@ jobs:
       - name: Deploy Appium Reports to GitHub Pages
         if: always() && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
+        continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: testing/appium/reports/HTML
