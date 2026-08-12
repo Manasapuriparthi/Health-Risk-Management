@@ -10,14 +10,12 @@
     "report": "node utils/appiumReportGenerator.js"
   },
   "dependencies": {
-    "webdriverio": "^8.36.1",
     "@wdio/appium-service": "^8.36.1",
     "appium": "^2.5.4",
-    "appium-uiautomator2-driver": "^3.7.0",
-    "jest": "^29.7.0",
     "exceljs": "^4.4.0",
-    "fs-extra": "^11.2.0",
-    "uuid": "^9.0.0"
+    "jest": "^29.7.0",
+    "uuid": "^9.0.0",
+    "webdriverio": "^8.36.1"
   },
   "jest": {
     "testEnvironment": "node",
@@ -25,5 +23,8 @@
     "reporters": [
       "default"
     ]
+  },
+  "devDependencies": {
+    "appium-uiautomator2-driver": "^2.45.0"
   }
 }

@@ -78,7 +78,7 @@ jobs:
       - name: Install Appium & Local Test Dependencies
         run: |
           npm install
-          npx appium driver install uiautomator2 || true
+          npx appium driver install uiautomator2@2.45.0 || true
           echo "✅ Appium and UiAutomator2 driver installed"
         working-directory: testing/appium
 
@@ -135,8 +135,9 @@ jobs:
             echo "🌐 STARTING LOCAL APPIUM SERVER"
             echo "=========================================="
             cd testing/appium
-            npx appium driver install uiautomator2 || true
-            npx appium driver list
+            npx appium driver install uiautomator2@2.45.0 || true
+            npx appium --version
+            npx appium driver list --installed
             nohup npx appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
             sleep 8
             curl -f http://127.0.0.1:4723/status || (cat appium-server.out && exit 1)
