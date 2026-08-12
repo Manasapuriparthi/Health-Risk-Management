@@ -17,7 +17,6 @@ async function buildDriver() {
     '--disable-gpu',
     '--disable-extensions',
     '--disable-infobars',
-    '--remote-debugging-port=9222',
     `--window-size=${config.WINDOW_WIDTH},${config.WINDOW_HEIGHT}`
   );
 

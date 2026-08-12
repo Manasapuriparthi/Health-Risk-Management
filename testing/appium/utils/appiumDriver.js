@@ -9,7 +9,7 @@ async function buildAppiumDriver() {
   const driver = await remote({
     hostname: config.appiumServer.host,
     port: config.appiumServer.port,
-    path: '/wd/hub',
+    path: process.env.APPIUM_PATH || '/',
     capabilities: config.capabilities,
     connectionRetryTimeout: 180000,
     connectionRetryCount: 3,

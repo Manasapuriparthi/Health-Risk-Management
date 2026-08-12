@@ -1,4 +1,6 @@
-'use strict';
+const path = require('path');
+
+const defaultApkPath = path.resolve(__dirname, '../../mobile/build/app/outputs/flutter-apk/app-debug.apk');
 
 module.exports = {
   appiumServer: {
@@ -9,7 +11,7 @@ module.exports = {
     platformName: 'Android',
     'appium:deviceName': process.env.DEVICE_NAME || 'Android Emulator',
     'appium:udid': process.env.DEVICE_UDID || '',
-    'appium:app': process.env.APK_PATH || '../../../mobile/build/app/outputs/flutter-apk/app-debug.apk',
+    'appium:app': process.env.APK_PATH ? path.resolve(process.env.APK_PATH) : defaultApkPath,
     'appium:appPackage': 'com.vitalpredict.mobile',
     'appium:appActivity': 'com.vitalpredict.mobile.MainActivity',
     'appium:automationName': 'UiAutomator2',
