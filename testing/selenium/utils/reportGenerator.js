@@ -204,4 +204,21 @@ ${passedTests.length > 20 ? `\n_...and ${passedTests.length - 20} more passing t
   return md;
 }
 
+if (require.main === module) {
+  (async () => {
+    try {
+      const tracker = require('./testTracker');
+      const summary = tracker.getSummary();
+      await generateHTMLReport(summary);
+      await generateJSONReport(summary);
+      await generateMarkdownSummary(summary);
+      console.log('✅ Selenium report generation complete.');
+    } catch (e) {
+      console.error('❌ Error generating Selenium report:', e);
+      process.exit(1);
+    }
+  })();
+}
+
 module.exports = { generateHTMLReport, generateJSONReport, generateMarkdownSummary };
+

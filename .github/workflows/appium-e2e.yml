@@ -13,7 +13,7 @@ jobs:
   appium-android-e2e:
     name: Appium E2E on Android Emulator
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 35
 
     steps:
       # ── Stage 1: Checkout ──────────────────────────────────────────────────
@@ -27,46 +27,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # ── Stage 3: Setup Android SDK ─────────────────────────────────────────
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # ── Stage 3: Setup Node.js 20 ──────────────────────────────────────────
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      # ── Stage 4: Install Android Platform & Tools ─────────────────────────
-      - name: Install Android SDK Components
+      # ── Stage 4: Setup Python & Start Backend ──────────────────────────────
+      - name: Setup Python & Start Backend
         run: |
-          yes | sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" \
-            "system-images;android-34;google_apis;x86_64" "emulator" --sdk_root=$ANDROID_SDK_ROOT
-          echo "✅ Android SDK components installed"
+          pip install -r backend/requirements.txt
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > ../backend.log 2>&1 &
+          sleep 8
+          curl -f http://localhost:8000/api/health || (cat ../backend.log && exit 1)
+          echo "✅ Backend started"
+        working-directory: backend
 
-      # ── Stage 5: Create & Start Android Emulator ──────────────────────────
-      - name: Create Android Virtual Device
-        run: |
-          echo "no" | avdmanager create avd \
-            --name "Pixel_6_API_34" \
-            --package "system-images;android-34;google_apis;x86_64" \
-            --device "pixel_6" \
-            --force
-          echo "✅ AVD created"
-
-      - name: Start Android Emulator
-        run: |
-          $ANDROID_SDK_ROOT/emulator/emulator \
-            -avd Pixel_6_API_34 \
-            -no-window -no-audio -no-boot-anim \
-            -gpu swiftshader_indirect \
-            -memory 3072 \
-            -cores 2 &
-          echo "✅ Emulator starting..."
-
-      - name: Wait for Emulator to Boot
-        run: |
-          adb wait-for-device
-          echo "Waiting for emulator to fully boot..."
-          timeout 300 bash -c 'while [[ "$(adb shell getprop sys.boot_completed 2>&1)" != "1" ]]; do sleep 5; done'
-          adb shell input keyevent 82
-          echo "✅ Emulator ready"
-
-      # ── Stage 6: Setup Flutter & Build APK ───────────────────────────────
+      # ── Stage 5: Setup Flutter & Build Debug APK ───────────────────────────
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -81,26 +58,7 @@ jobs:
         run: flutter build apk --debug
         working-directory: mobile
 
-      - name: Install APK on Emulator
-        run: |
-          adb install -r "mobile/build/app/outputs/flutter-apk/app-debug.apk"
-          echo "✅ APK installed on emulator"
-
-      # ── Stage 7: Start Backend ─────────────────────────────────────────────
-      - name: Setup Python & Start Backend
-        run: |
-          pip install -r backend/requirements.txt
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-          sleep 8
-          echo "✅ Backend started"
-        working-directory: backend
-
-      # ── Stage 8: Setup Appium ─────────────────────────────────────────────
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
+      # ── Stage 6: Setup Appium Server ───────────────────────────────────────
       - name: Install Appium Server
         run: |
           npm install -g appium@2.5.4
@@ -109,39 +67,37 @@ jobs:
 
       - name: Start Appium Server
         run: |
-          appium --address 127.0.0.1 --port 4723 --log appium-server.log &
+          nohup appium --address 127.0.0.1 --port 4723 --log appium-server.log > appium-server.out 2>&1 &
           sleep 8
-          curl -f http://localhost:4723/status || echo "Appium status check failed"
+          curl -f http://localhost:4723/status || echo "Appium status check warning"
           echo "✅ Appium server started"
 
-      # ── Stage 9: Install Test Dependencies ───────────────────────────────
       - name: Install Appium Test Dependencies
         run: npm install
         working-directory: testing/appium
 
-      # ── Stage 10: Run Appium Tests ────────────────────────────────────────
-      - name: Run Appium Authentication Tests
-        run: npm run test:auth
+      # ── Stage 7: Run Appium Tests on Hardware Accelerated Android Emulator ──
+      - name: Run Appium Tests on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: default
+          arch: x86
+          profile: pixel_6
+          script: |
+            adb install -r "mobile/build/app/outputs/flutter-apk/app-debug.apk"
+            cd testing/appium
+            npm run test:auth || true
+            npm run test:regression || true
+
+      # ── Stage 8: Generate Reports ──────────────────────────────────────────
+      - name: Generate Appium Reports
+        if: always()
+        run: node utils/appiumReportGenerator.js
         working-directory: testing/appium
         continue-on-error: true
-        env:
-          APPIUM_HOST: '127.0.0.1'
-          APPIUM_PORT: '4723'
-          API_BASE: 'http://10.0.2.2:8000/api'
-          APK_PATH: '../../../mobile/build/app/outputs/flutter-apk/app-debug.apk'
-          BUILD_NUMBER: ${{ github.run_number }}
 
-      - name: Run Appium Regression Suite
-        run: npm run test:regression
-        working-directory: testing/appium
-        continue-on-error: true
-        env:
-          APPIUM_HOST: '127.0.0.1'
-          APPIUM_PORT: '4723'
-          API_BASE: 'http://10.0.2.2:8000/api'
-          BUILD_NUMBER: ${{ github.run_number }}
-
-      # ── Stage 11: Capture Logs ────────────────────────────────────────────
+      # ── Stage 9: Capture Device Logs ───────────────────────────────────────
       - name: Capture Device Logs
         if: always()
         run: |
@@ -149,7 +105,7 @@ jobs:
           adb logcat -d > "testing/appium/logs/device.log" 2>&1 || true
           cat appium-server.log > "testing/appium/logs/appium.log" 2>&1 || true
 
-      # ── Stage 12: Upload Artifacts ────────────────────────────────────────
+      # ── Stage 10: Upload Artifacts ─────────────────────────────────────────
       - name: Upload Appium Test Artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -161,7 +117,7 @@ jobs:
             testing/appium/screenshots/
             testing/appium/logs/
 
-      # ── Stage 13: GitHub Pages ────────────────────────────────────────────
+      # ── Stage 11: Deploy Reports to GitHub Pages ───────────────────────────
       - name: Deploy Appium Reports to GitHub Pages
         if: always() && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
@@ -171,11 +127,10 @@ jobs:
           destination_dir: reports/appium/latest
           keep_files: true
 
-      # ── Stage 14: Summary ─────────────────────────────────────────────────
+      # ── Stage 12: GitHub Actions Summary ──────────────────────────────────
       - name: Publish GitHub Actions Summary
         if: always()
         run: |
           SUMMARY="testing/appium/reports/Summary/appium-summary.md"
           if [ -f "$SUMMARY" ]; then cat "$SUMMARY" >> $GITHUB_STEP_SUMMARY; fi
-          echo "**Build:** ${{ github.run_number }} | **Platform:** Android API 34" >> $GITHUB_STEP_SUMMARY
-
+          echo "**Build:** ${{ github.run_number }} | **Platform:** Android Emulator API 29" >> $GITHUB_STEP_SUMMARY

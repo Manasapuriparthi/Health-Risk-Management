@@ -183,4 +183,19 @@ async function generateExcelReport(summary) {
   return outputPath;
 }
 
+if (require.main === module) {
+  (async () => {
+    try {
+      const tracker = require('./testTracker');
+      const summary = tracker.getSummary();
+      await generateExcelReport(summary);
+      console.log('✅ Excel report generation complete.');
+    } catch (e) {
+      console.error('❌ Error generating Excel report:', e);
+      process.exit(1);
+    }
+  })();
+}
+
 module.exports = { generateExcelReport };
+

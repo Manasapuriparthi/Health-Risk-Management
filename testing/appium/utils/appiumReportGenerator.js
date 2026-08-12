@@ -116,4 +116,19 @@ async function generateAppiumReports(summary) {
   console.log(`✅ Appium reports generated. Total=${summary.total} Passed=${summary.passed} Failed=${summary.failed} Rate=${summary.passRate}%`);
 }
 
+if (require.main === module) {
+  (async () => {
+    try {
+      const tracker = require('./appiumTracker');
+      const summary = tracker.getSummary();
+      await generateAppiumReports(summary);
+      console.log('✅ Appium report generation complete.');
+    } catch (e) {
+      console.error('❌ Error generating Appium report:', e);
+      process.exit(1);
+    }
+  })();
+}
+
 module.exports = { generateAppiumReports };
+

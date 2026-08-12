@@ -69,9 +69,9 @@ jobs:
       # ── Stage 7: Start Backend Server ─────────────────────────────────────
       - name: Start FastAPI Backend
         run: |
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > ../backend.log 2>&1 &
           sleep 8
-          curl -f http://localhost:8000/api/health || exit 1
+          curl -f http://localhost:8000/api/health || (cat ../backend.log && exit 1)
           echo "✅ Backend is healthy"
         working-directory: backend
 
@@ -87,9 +87,9 @@ jobs:
 
       - name: Start Frontend Preview
         run: |
-          npx vite preview --port 5173 --host 0.0.0.0 &
+          nohup npx vite preview --port 5173 --host 0.0.0.0 > ../frontend.log 2>&1 &
           sleep 5
-          curl -f http://localhost:5173 || echo "Frontend not ready, tests may fail"
+          curl -f http://localhost:5173 || (cat ../frontend.log && exit 1)
         working-directory: frontend
 
       # ── Stage 10: Install Selenium Dependencies ───────────────────────────
@@ -151,7 +151,9 @@ jobs:
       # ── Stage 13: Generate Reports ────────────────────────────────────────
       - name: Generate Excel & HTML Reports
         if: always()
-        run: node utils/reportGenerator.js && node utils/excelGenerator.js
+        run: |
+          node utils/reportGenerator.js
+          node utils/excelGenerator.js
         working-directory: testing/selenium
         continue-on-error: true
 
