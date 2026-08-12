@@ -33,9 +33,16 @@ jobs:
         with:
           node-version: '20'
 
-      # ── Stage 4: Setup Python & Start Backend ──────────────────────────────
-      - name: Setup Python & Start Backend
+      # ── Stage 4: Setup Python 3.11 ─────────────────────────────────────────
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ── Stage 5: Start FastAPI Backend ────────────────────────────────────
+      - name: Start FastAPI Backend
         run: |
+          python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > ../backend.log 2>&1 &
           sleep 8
@@ -43,7 +50,7 @@ jobs:
           echo "✅ Backend started"
         working-directory: backend
 
-      # ── Stage 5: Setup Flutter & Build Debug APK ───────────────────────────
+      # ── Stage 6: Setup Flutter & Build Debug APK ───────────────────────────
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -58,7 +65,7 @@ jobs:
         run: flutter build apk --debug
         working-directory: mobile
 
-      # ── Stage 6: Setup Appium Server ───────────────────────────────────────
+      # ── Stage 7: Setup Appium Server ───────────────────────────────────────
       - name: Install Appium Server
         run: |
           npm install -g appium@2.5.4
@@ -76,28 +83,29 @@ jobs:
         run: npm install
         working-directory: testing/appium
 
-      # ── Stage 7: Run Appium Tests on Hardware Accelerated Android Emulator ──
+      # ── Stage 8: Run Appium Tests on Hardware Accelerated Android Emulator ──
       - name: Run Appium Tests on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
           target: default
-          arch: x86
+          arch: x86_64
           profile: pixel_6
+          disable-animations: true
           script: |
             adb install -r "mobile/build/app/outputs/flutter-apk/app-debug.apk"
             cd testing/appium
             npm run test:auth || true
             npm run test:regression || true
 
-      # ── Stage 8: Generate Reports ──────────────────────────────────────────
+      # ── Stage 9: Generate Reports ──────────────────────────────────────────
       - name: Generate Appium Reports
         if: always()
         run: node utils/appiumReportGenerator.js
         working-directory: testing/appium
         continue-on-error: true
 
-      # ── Stage 9: Capture Device Logs ───────────────────────────────────────
+      # ── Stage 10: Capture Device Logs ──────────────────────────────────────
       - name: Capture Device Logs
         if: always()
         run: |
@@ -105,7 +113,7 @@ jobs:
           adb logcat -d > "testing/appium/logs/device.log" 2>&1 || true
           cat appium-server.log > "testing/appium/logs/appium.log" 2>&1 || true
 
-      # ── Stage 10: Upload Artifacts ─────────────────────────────────────────
+      # ── Stage 11: Upload Artifacts ─────────────────────────────────────────
       - name: Upload Appium Test Artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -117,7 +125,7 @@ jobs:
             testing/appium/screenshots/
             testing/appium/logs/
 
-      # ── Stage 11: Deploy Reports to GitHub Pages ───────────────────────────
+      # ── Stage 12: Deploy Reports to GitHub Pages ───────────────────────────
       - name: Deploy Appium Reports to GitHub Pages
         if: always() && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
@@ -127,7 +135,7 @@ jobs:
           destination_dir: reports/appium/latest
           keep_files: true
 
-      # ── Stage 12: GitHub Actions Summary ──────────────────────────────────
+      # ── Stage 13: GitHub Actions Summary ──────────────────────────────────
       - name: Publish GitHub Actions Summary
         if: always()
         run: |
