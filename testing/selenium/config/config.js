@@ -21,8 +21,8 @@ const config = {
   RETRY_DELAY: 1000,
 
   // Test credentials
-  PATIENT_EMAIL: process.env.TEST_PATIENT_EMAIL || 'testpatient@vitalpredict.com',
-  PATIENT_PASSWORD: process.env.TEST_PATIENT_PASS || 'Test@12345',
+  PATIENT_EMAIL: process.env.TEST_PATIENT_EMAIL || 'manasapuriparthi@gmail.com',
+  PATIENT_PASSWORD: process.env.TEST_PATIENT_PASS || 'password123',
   DOCTOR_EMAIL: process.env.TEST_DOCTOR_EMAIL || 'sarah@vitalpredict.com',
   DOCTOR_PASSWORD: process.env.TEST_DOCTOR_PASS || 'password123',
 

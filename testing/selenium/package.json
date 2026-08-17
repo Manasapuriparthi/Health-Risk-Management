@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Enterprise Selenium E2E Test Suite for VitalPredict Web Application",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --runInBand --forceExit",
+    "test": "jest --runInBand --forceExit",
     "test:auth": "jest tests/auth.test.js --runInBand --forceExit",
     "test:dashboard": "jest tests/dashboard.test.js --runInBand --forceExit",
     "test:appointments": "jest tests/appointments.test.js --runInBand --forceExit",

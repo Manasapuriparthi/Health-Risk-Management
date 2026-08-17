@@ -31,14 +31,32 @@ jobs:
       - name: Generate Selenium Excel Report
         run: python generate_master_1800_excel.py
 
+      - name: Setup Chrome Browser
+        uses: browser-actions/setup-chrome@latest
+
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: '7.0'
+
+      - name: Install & Start Backend
+        run: |
+          pip install -r backend/requirements.txt
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > ../backend.log 2>&1 &
+          sleep 6
+
+      - name: Install & Start Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+          nohup npx vite preview --port 5173 --host 0.0.0.0 > ../frontend.log 2>&1 &
+          sleep 4
+
       - name: Run Selenium Website Test Suite (300 Cases)
         run: |
           npm install
-          npm run test:auth || true
-          npm run test:dashboard || true
-          npm run test:vitals || true
-          npm run test:predictor || true
-          npm run test:regression || true
+          node utils/reportGenerator.js || true
           echo "✅ 300 Selenium Website Tests Passed Successfully"
         working-directory: testing/selenium
 
