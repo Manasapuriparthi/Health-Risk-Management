@@ -41,23 +41,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  int? _toInt(dynamic val) {
+    if (val == null) return null;
+    if (val is int) return val;
+    if (val is double) return val.round();
+    if (val is num) return val.round();
+    if (val is String) return double.tryParse(val)?.round();
+    return null;
+  }
+
   int _healthScore() {
-    if (_latestVitals == null) return 85;
-    int score = 100;
-    final sys  = _latestVitals!['systolic_bp']  as int?;
-    final dia  = _latestVitals!['diastolic_bp'] as int?;
-    final sug  = _latestVitals!['blood_sugar']  as int?;
-    final hr   = _latestVitals!['heart_rate']   as int?;
-    final chol = _latestVitals!['cholesterol']  as int?;
-    if (sys != null && sys > 130) score -= 10;
-    if (sys != null && sys > 140) score -= 10;
-    if (dia != null && dia > 85)  score -= 8;
-    if (sug != null && sug > 100) score -= 8;
-    if (sug != null && sug > 126) score -= 10;
-    if (hr  != null && (hr < 50 || hr > 100)) score -= 8;
-    if (chol != null && chol > 200) score -= 8;
-    if (chol != null && chol > 240) score -= 10;
-    return score.clamp(10, 100);
+    if (_latestVitals == null) return 0;
+    final sys  = _toInt(_latestVitals!['systolic_bp']);
+    final dia  = _toInt(_latestVitals!['diastolic_bp']);
+    final sug  = _toInt(_latestVitals!['blood_sugar']);
+    final hr   = _toInt(_latestVitals!['heart_rate']);
+    final sl   = _toInt(_latestVitals!['sleep_hours']);
+    final chol = _toInt(_latestVitals!['cholesterol']);
+    final act  = _toInt(_latestVitals!['active_minutes']);
+
+    int bpScore = 20;
+    if (sys != null && dia != null) {
+      int sysPt = 10;
+      if (sys >= 140) sysPt = 3;
+      else if (sys >= 130) sysPt = 6;
+      else if (sys >= 120) sysPt = 8;
+
+      int diaPt = 10;
+      if (dia >= 90) diaPt = 3;
+      else if (dia >= 80) diaPt = 6;
+
+      bpScore = sysPt + diaPt;
+    }
+
+    int glucoseScore = 20;
+    if (sug != null) {
+      if (sug >= 126 || sug < 70) glucoseScore = 6;
+      else if (sug >= 100) glucoseScore = 12;
+    }
+
+    int hrScore = 15;
+    if (hr != null) {
+      if (hr > 100 || hr < 55) hrScore = 5;
+      else if (hr > 90 || hr < 60) hrScore = 10;
+    }
+
+    int sleepScore = 15;
+    if (sl != null) {
+      if (sl >= 7 && sl <= 9) sleepScore = 15;
+      else if (sl >= 6 || sl <= 10) sleepScore = 11;
+      else sleepScore = 6;
+    }
+
+    int cholScore = 15;
+    if (chol != null) {
+      if (chol >= 240) cholScore = 5;
+      else if (chol >= 200) cholScore = 10;
+    }
+
+    int activeScore = 15;
+    if (act != null) {
+      if (act >= 45) activeScore = 15;
+      else if (act >= 30) activeScore = 12;
+      else activeScore = 7;
+    }
+
+    final total = bpScore + glucoseScore + hrScore + sleepScore + cholScore + activeScore;
+    return total.clamp(0, 100);
   }
 
   String _greeting() {

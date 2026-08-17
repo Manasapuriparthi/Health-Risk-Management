@@ -1,6 +1,6 @@
 'use strict';
 
-const { buildDriver, By, until } = require('../utils/driver');
+const { buildDriver, By, until, waitAndType } = require('../utils/driver');
 const AuthPage = require('../pages/AuthPage');
 const DashboardPage = require('../pages/DashboardPage');
 const testData = require('../data/testData');
@@ -231,12 +231,8 @@ describe('Authentication — 40 Test Cases', () => {
     test(`${id} — ${name}`, async () => {
       await run(id, 'Authentication', name, priority, async () => {
         await auth.navigate();
-        const emailInput = await driver.findElement(By.css('input[type="email"],input[placeholder*="email" i]'));
-        await emailInput.clear();
-        await emailInput.sendKeys(payload);
-        const passInput = await driver.findElement(By.css('input[type="password"]'));
-        await passInput.clear();
-        await passInput.sendKeys('Test@12345');
+        await waitAndType(driver, By.css('input[type="email"], input[placeholder*="email" i]'), payload);
+        await waitAndType(driver, By.css('input[type="password"]'), 'Test@12345');
         const btn = await driver.findElement(By.xpath('//button[contains(text(),"Sign In") or contains(text(),"Login")]'));
         await btn.click();
         await driver.sleep(1500);
