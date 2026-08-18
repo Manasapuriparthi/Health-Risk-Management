@@ -10,12 +10,23 @@ class ApiService {
     defaultValue: 'https://health-risk-management.onrender.com/api',
   );
 
+  static String _activeBaseUrl = baseUrl;
+
+  static List<String> get _candidateUrls {
+    final list = <String>[_activeBaseUrl, baseUrl];
+    if (!list.contains('http://10.0.2.2:8000/api')) list.add('http://10.0.2.2:8000/api');
+    if (!list.contains('http://127.0.0.1:8000/api')) list.add('http://127.0.0.1:8000/api');
+    if (!list.contains('https://health-risk-management.onrender.com/api')) {
+      list.add('https://health-risk-management.onrender.com/api');
+    }
+    return list;
+  }
+
   // Keep-alive timer to prevent Render cold starts
   static Timer? _keepAliveTimer;
 
   static void startKeepAlive() {
     _keepAliveTimer?.cancel();
-    // Ping health endpoint immediately, then every 14 minutes
     _pingHealth();
     _keepAliveTimer = Timer.periodic(
       const Duration(minutes: 14),
@@ -30,10 +41,41 @@ class ApiService {
 
   static Future<void> _pingHealth() async {
     try {
-      await http.get(Uri.parse('$baseUrl/health')).timeout(
-        const Duration(seconds: 10),
-      );
+      await _execute('GET', '/health', timeout: const Duration(seconds: 8));
     } catch (_) {}
+  }
+
+  static Future<http.Response> _execute(
+    String method,
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+    Duration timeout = const Duration(seconds: 25),
+  }) async {
+    Object? lastError;
+    for (final base in _candidateUrls) {
+      try {
+        final uri = Uri.parse('$base$path');
+        http.Response res;
+        if (method == 'POST') {
+          res = await http.post(uri, headers: headers, body: body).timeout(timeout);
+        } else if (method == 'PUT') {
+          res = await http.put(uri, headers: headers, body: body).timeout(timeout);
+        } else if (method == 'DELETE') {
+          res = await http.delete(uri, headers: headers, body: body).timeout(timeout);
+        } else {
+          res = await http.get(uri, headers: headers).timeout(timeout);
+        }
+        _activeBaseUrl = base;
+        return res;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    if (lastError is TimeoutException) {
+      throw ApiException('Server is taking longer to respond or waking up. Please try again in a few seconds.', 408);
+    }
+    throw ApiException('Unable to connect. Please ensure local backend or server is running.', 503);
   }
 
   // ─── Token Storage ────────────────────────────────────────────────────────
@@ -95,23 +137,20 @@ class ApiService {
   // ─── Auth ─────────────────────────────────────────────────────────────────
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final res = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 60));
-      
-      final data = _handleResponse(res) as Map<String, dynamic>;
-      await saveToken(data['access_token']);
-      // Fetch profile to get role
-      final profile = await getMe();
-      await saveUserRole(profile['role'] ?? 'patient');
-      await saveUserName(profile['username'] ?? '');
-      return profile;
-    } on TimeoutException {
-      throw ApiException('Server is waking up. Please try again in a few seconds.', 408);
-    }
+    final res = await _execute(
+      'POST',
+      '/auth/login',
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+      timeout: const Duration(seconds: 35),
+    );
+    
+    final data = _handleResponse(res) as Map<String, dynamic>;
+    await saveToken(data['access_token']);
+    final profile = await getMe();
+    await saveUserRole(profile['role'] ?? 'patient');
+    await saveUserName(profile['username'] ?? '');
+    return profile;
   }
 
   static Future<Map<String, dynamic>> register({
@@ -134,29 +173,29 @@ class ApiService {
       if (height != null) 'height': height,
       if (specialty != null) 'specialty': specialty,
     };
-    try {
-      final res = await http.post(
-        Uri.parse('$baseUrl/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 60));
-      
-      final data = _handleResponse(res) as Map<String, dynamic>;
-      await saveToken(data['access_token']);
-      final profile = await getMe();
-      await saveUserRole(profile['role'] ?? 'patient');
-      await saveUserName(profile['username'] ?? '');
-      return profile;
-    } on TimeoutException {
-      throw ApiException('Server is waking up. Please try again in a few seconds.', 408);
-    }
+    final res = await _execute(
+      'POST',
+      '/auth/register',
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+      timeout: const Duration(seconds: 35),
+    );
+    
+    final data = _handleResponse(res) as Map<String, dynamic>;
+    await saveToken(data['access_token']);
+    final profile = await getMe();
+    await saveUserRole(profile['role'] ?? 'patient');
+    await saveUserName(profile['username'] ?? '');
+    return profile;
   }
 
   static Future<Map<String, dynamic>> getMe() async {
-    final res = await http.get(
-      Uri.parse('$baseUrl/auth/me'),
+    final res = await _execute(
+      'GET',
+      '/auth/me',
       headers: await _authHeaders(),
-    ).timeout(const Duration(seconds: 30));
+      timeout: const Duration(seconds: 25),
+    );
     return _handleResponse(res) as Map<String, dynamic>;
   }
 
