@@ -10,13 +10,13 @@ class ApiService {
     defaultValue: 'https://health-risk-management.onrender.com/api',
   );
 
-  static String _activeBaseUrl = 'https://health-risk-management.onrender.com/api';
+  static String _activeBaseUrl = 'http://10.101.57.63:8000/api';
 
   static List<String> get _candidateUrls {
     final list = <String>[
       _activeBaseUrl,
-      'https://health-risk-management.onrender.com/api',
       'http://10.101.57.63:8000/api',
+      'https://health-risk-management.onrender.com/api',
       baseUrl,
       'http://10.0.2.2:8000/api',
       'http://127.0.0.1:8000/api',
