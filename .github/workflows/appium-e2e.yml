@@ -115,13 +115,27 @@ jobs:
             echo "📱 EMULATOR BOOT & READINESS CHECK"
             echo "=========================================="
             adb wait-for-device
-            while [ "$(adb shell getprop sys.boot_completed 2>&1 | tr -d '\r')" != "1" ]; do
-              sleep 2
+            
+            MAX_BOOT_RETRIES=30
+            BOOT_RETRY=0
+            until [ "$(adb shell getprop sys.boot_completed 2>&1 | tr -d '\r')" = "1" ] || [ $BOOT_RETRY -ge $MAX_BOOT_RETRIES ]; do
+              echo "Waiting for emulator boot... ($((BOOT_RETRY+1))/$MAX_BOOT_RETRIES)"
+              sleep 3
+              BOOT_RETRY=$((BOOT_RETRY+1))
             done
-            while [ "$(adb shell pm path android 2>&1 | tr -d '\r')" == "" ]; do
-              sleep 2
+
+            PM_RETRY=0
+            until [ "$(adb shell pm path android 2>&1 | tr -d '\r')" != "" ] || [ $PM_RETRY -ge $MAX_BOOT_RETRIES ]; do
+              echo "Waiting for Android package manager... ($((PM_RETRY+1))/$MAX_BOOT_RETRIES)"
+              sleep 3
+              PM_RETRY=$((PM_RETRY+1))
             done
-            echo "✅ Android Emulator fully booted and package manager responsive!"
+
+            if [ "$(adb shell getprop sys.boot_completed 2>&1 | tr -d '\r')" = "1" ]; then
+              echo "✅ Android Emulator fully booted and package manager responsive!"
+            else
+              echo "⚠️ WARNING: Android Emulator boot timed out after 90 seconds. Continuing with execution."
+            fi
             adb devices -l
 
             echo "=========================================="

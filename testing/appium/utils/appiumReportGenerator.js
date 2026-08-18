@@ -119,8 +119,36 @@ async function generateAppiumReports(summary) {
   fs.writeFileSync(path.join(config.REPORT_DIR, 'JSON', 'appium-results.json'), JSON.stringify({ summary, tests: summary.results }, null, 2));
 
   // Markdown
-  const md = `# 📱 Appium Android E2E Summary\n\n| Metric | Value |\n|--------|-------|\n| Total | ${summary.total} |\n| Passed | ${summary.passed} |\n| Failed | ${summary.failed} |\n| Pass Rate | ${summary.passRate}% |\n| Duration | ${(summary.totalDuration / 1000).toFixed(1)}s |\n\n${summary.results.filter(r => r.status === 'FAIL').map(r => `- ❌ \`${r.testId}\` — ${r.reason}`).join('\n') || '✅ No failures'}`;
+  const isInterrupted = summary.passed === 0 && summary.failed === 0 && summary.blocked > 0;
+  const statusHeader = isInterrupted 
+    ? '⚠️ **Suite Execution Interrupted / Setup Timeout** — Tests were blocked due to emulator or environment setup issue.'
+    : summary.failed > 0 
+      ? `❌ **Failures Recorded:** ${summary.failed} test(s) failed.` 
+      : '✅ **All Completed Tests Passed Successfully!**';
+
+  const failuresOrBlocks = summary.results.filter(r => r.status === 'FAIL' || r.status === 'BLOCK');
+  const details = failuresOrBlocks.length > 0 
+    ? failuresOrBlocks.slice(0, 15).map(r => `- ${r.status === 'FAIL' ? '❌' : '⚠️'} \`${r.testId}\` (${r.module}) — ${r.reason || 'Blocked/Failed'}`).join('\n')
+    : '✅ No failures recorded.';
+
+  const md = `# 📱 Appium Android E2E Summary
+
+| Metric | Value |
+|--------|-------|
+| Total | ${summary.total} |
+| Passed | ${summary.passed} |
+| Failed | ${summary.failed} |
+| Blocked / Skipped | ${summary.blocked + summary.skipped} |
+| Pass Rate | ${summary.passRate}% |
+| Duration | ${(summary.totalDuration / 1000).toFixed(1)}s |
+
+${statusHeader}
+
+### Execution Details:
+${details}
+`;
   fs.writeFileSync(path.join(config.REPORT_DIR, 'Summary', 'appium-summary.md'), md);
+
 
   console.log(`✅ Appium reports generated. Total=${summary.total} Passed=${summary.passed} Failed=${summary.failed} Rate=${summary.passRate}%`);
 }
