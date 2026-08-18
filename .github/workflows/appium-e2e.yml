@@ -103,13 +103,18 @@ jobs:
             echo "=========================================="
             echo "📦 APK ABSOLUTE PATH VERIFICATION"
             echo "=========================================="
+            pwd
+            find . -type f -name "*.apk" -print
             APK_PATH="$(pwd)/mobile/build/app/outputs/flutter-apk/app-debug.apk"
             echo "APK Target Path: $APK_PATH"
             if [ ! -f "$APK_PATH" ]; then
               echo "❌ ERROR: APK file does not exist at $APK_PATH"
+              echo "Searching for APK files..."
+              find . -type f -name "*.apk" -print
               exit 1
             fi
-            echo "✅ APK File Found ($(du -h "$APK_PATH" | cut -f1))"
+            echo "APK exists: $APK_PATH"
+            ls -lh "$APK_PATH"
 
             echo "=========================================="
             echo "📱 EMULATOR BOOT & READINESS CHECK"
