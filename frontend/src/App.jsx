@@ -78,6 +78,23 @@ export default function App() {
     setIsUnlocked(false);
   };
 
+  const handleSwitchRole = async (newRole) => {
+    try {
+      setUser(prev => prev ? { ...prev, role: newRole } : null);
+      await fetch(`${API_BASE}/auth/switch-role`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+      await fetchUserProfile();
+    } catch (err) {
+      console.error('Role switch failed:', err);
+    }
+  };
+
   const handleCompleteOnboarding = () => {
     setOnboarded(true);
     localStorage.setItem('onboarded', 'true');
@@ -157,7 +174,7 @@ export default function App() {
                 <button className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left' }} onClick={() => setActiveTab('profile')}>
                   ⚙️ Profile & Settings
                 </button>
-                <button className="nav-btn" style={{ width: '100%', textAlign: 'left', color: 'var(--accent-teal)' }} onClick={() => setUser({ ...user, role: 'patient' })}>
+                <button className="nav-btn" style={{ width: '100%', textAlign: 'left', color: 'var(--accent-teal)' }} onClick={() => handleSwitchRole('patient')}>
                   🧑‍⚕️ Switch to Patient Portal
                 </button>
               </div>
@@ -309,6 +326,9 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <button className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left' }} onClick={() => setActiveTab('profile')}>
                 ⚙️ Profile & Settings
+              </button>
+              <button className="nav-btn" style={{ width: '100%', textAlign: 'left', color: 'var(--accent-indigo)' }} onClick={() => handleSwitchRole('doctor')}>
+                🩺 Switch to Doctor Portal
               </button>
             </div>
           </div>

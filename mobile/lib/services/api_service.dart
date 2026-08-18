@@ -160,6 +160,21 @@ class ApiService {
     return profile;
   }
 
+  static Future<void> switchRole(String newRole) async {
+    final token = await getToken();
+    final res = await _execute(
+      'POST',
+      '/auth/switch-role',
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'role': newRole}),
+    );
+    _handleResponse(res);
+    await saveUserRole(newRole);
+  }
+
   static Future<Map<String, dynamic>> register({
     required String username,
     required String email,

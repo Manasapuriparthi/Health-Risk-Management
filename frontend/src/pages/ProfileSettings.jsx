@@ -421,6 +421,37 @@ export default function ProfileSettings({ user, token, API_BASE }) {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
                   <div>
+                    <span style={{ fontSize: '0.9rem', display: 'block', fontWeight: 'bold' }}>Active Account Role & Portal View</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Current Role: <strong>{user?.role === 'doctor' ? '🩺 Doctor' : '🧑‍⚕️ Patient'}</strong>
+                    </span>
+                  </div>
+                  <button 
+                    className="btn-primary" 
+                    style={{ background: user?.role === 'doctor' ? 'var(--accent-teal)' : 'var(--accent-indigo)' }}
+                    onClick={async () => {
+                      const newRole = user?.role === 'doctor' ? 'patient' : 'doctor';
+                      try {
+                        await fetch(`${API_BASE}/auth/switch-role`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`
+                          },
+                          body: JSON.stringify({ role: newRole })
+                        });
+                        window.location.reload();
+                      } catch (err) {
+                        console.error('Role update failed:', err);
+                      }
+                    }}
+                  >
+                    {user?.role === 'doctor' ? 'Switch to Patient Portal' : 'Switch to Doctor Portal'}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+                  <div>
                     <span style={{ fontSize: '0.9rem', display: 'block', fontWeight: 'bold' }}>Clear Application Cache</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Removes all temporary logs and report sessions.</span>
                   </div>

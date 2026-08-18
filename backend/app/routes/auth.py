@@ -143,7 +143,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 @router.put("/me")
 async def update_me(profile_updates: dict, current_user: dict = Depends(get_current_user)):
     # Sanitize inputs
-    allowed_keys = ["age", "height", "weight", "active_minutes"]
+    allowed_keys = ["age", "height", "weight", "active_minutes", "role", "specialty"]
     updates = {k: v for k, v in profile_updates.items() if k in allowed_keys}
     
     if updates:
@@ -152,6 +152,20 @@ async def update_me(profile_updates: dict, current_user: dict = Depends(get_curr
             {"$set": updates}
         )
     return {"status": "success", "updated_fields": updates}
+
+class SwitchRoleRequest(BaseModel):
+    role: str
+
+@router.post("/switch-role")
+async def switch_role(req: SwitchRoleRequest, current_user: dict = Depends(get_current_user)):
+    if req.role not in ["patient", "doctor"]:
+        raise HTTPException(status_code=400, detail="Invalid role specified")
+    
+    await users_collection.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"role": req.role}}
+    )
+    return {"status": "success", "new_role": req.role}
 
 @router.get("/doctors", response_model=List[UserResponse])
 async def get_doctors(current_user: dict = Depends(get_current_user)):

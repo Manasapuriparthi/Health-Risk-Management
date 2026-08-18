@@ -247,12 +247,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                if (isDoctor) {
-                  Navigator.of(context).pushReplacementNamed('/home');
-                } else {
-                  Navigator.of(context).pushReplacementNamed('/doctor_home');
-                }
+              onPressed: () async {
+                final targetRole = isDoctor ? 'patient' : 'doctor';
+                try {
+                  await ApiService.switchRole(targetRole);
+                } catch (_) {}
+                if (!mounted) return;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  targetRole == 'doctor' ? '/doctor_home' : '/home',
+                  (route) => false,
+                );
               },
               icon: Icon(
                 isDoctor ? Icons.person_outline_rounded : Icons.medical_services_outlined,
