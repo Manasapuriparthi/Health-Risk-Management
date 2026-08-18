@@ -151,11 +151,14 @@ export default function App() {
 
             <div>
               <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>
-                Settings
+                Settings & Modes
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <button className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left' }} onClick={() => setActiveTab('profile')}>
                   ⚙️ Profile & Settings
+                </button>
+                <button className="nav-btn" style={{ width: '100%', textAlign: 'left', color: 'var(--accent-teal)' }} onClick={() => setUser({ ...user, role: 'patient' })}>
+                  🧑‍⚕️ Switch to Patient Portal
                 </button>
               </div>
             </div>

@@ -243,6 +243,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 28),
 
+          // Portal Switcher button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                if (isDoctor) {
+                  Navigator.of(context).pushReplacementNamed('/home');
+                } else {
+                  Navigator.of(context).pushReplacementNamed('/doctor_home');
+                }
+              },
+              icon: Icon(
+                isDoctor ? Icons.person_outline_rounded : Icons.medical_services_outlined,
+                color: Colors.white,
+              ),
+              label: Text(
+                isDoctor ? 'Switch to Patient Portal' : 'Switch to Doctor Portal',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDoctor ? const Color(0xFF10B981) : const Color(0xFF6366F1),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // Logout
           SizedBox(
             width: double.infinity,
