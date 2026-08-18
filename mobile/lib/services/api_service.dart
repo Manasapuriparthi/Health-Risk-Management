@@ -10,16 +10,18 @@ class ApiService {
     defaultValue: 'https://health-risk-management.onrender.com/api',
   );
 
-  static String _activeBaseUrl = baseUrl;
+  static String _activeBaseUrl = 'https://health-risk-management.onrender.com/api';
 
   static List<String> get _candidateUrls {
-    final list = <String>[_activeBaseUrl, baseUrl];
-    if (!list.contains('http://10.0.2.2:8000/api')) list.add('http://10.0.2.2:8000/api');
-    if (!list.contains('http://127.0.0.1:8000/api')) list.add('http://127.0.0.1:8000/api');
-    if (!list.contains('https://health-risk-management.onrender.com/api')) {
-      list.add('https://health-risk-management.onrender.com/api');
-    }
-    return list;
+    final list = <String>[
+      _activeBaseUrl,
+      'https://health-risk-management.onrender.com/api',
+      'http://10.101.57.63:8000/api',
+      baseUrl,
+      'http://10.0.2.2:8000/api',
+      'http://127.0.0.1:8000/api',
+    ];
+    return list.toSet().toList();
   }
 
   // Keep-alive timer to prevent Render cold starts
@@ -41,7 +43,7 @@ class ApiService {
 
   static Future<void> _pingHealth() async {
     try {
-      await _execute('GET', '/health', timeout: const Duration(seconds: 8));
+      await _execute('GET', '/health', timeout: const Duration(seconds: 10));
     } catch (_) {}
   }
 
@@ -50,21 +52,26 @@ class ApiService {
     String path, {
     Map<String, String>? headers,
     Object? body,
-    Duration timeout = const Duration(seconds: 25),
+    Duration timeout = const Duration(seconds: 20),
   }) async {
     Object? lastError;
     for (final base in _candidateUrls) {
       try {
         final uri = Uri.parse('$base$path');
+        // Fast 2s timeout for loopback IPs on physical devices to prevent hanging
+        final effectiveTimeout = (base.contains('10.0.2.2') || base.contains('127.0.0.1'))
+            ? const Duration(seconds: 2)
+            : timeout;
+
         http.Response res;
         if (method == 'POST') {
-          res = await http.post(uri, headers: headers, body: body).timeout(timeout);
+          res = await http.post(uri, headers: headers, body: body).timeout(effectiveTimeout);
         } else if (method == 'PUT') {
-          res = await http.put(uri, headers: headers, body: body).timeout(timeout);
+          res = await http.put(uri, headers: headers, body: body).timeout(effectiveTimeout);
         } else if (method == 'DELETE') {
-          res = await http.delete(uri, headers: headers, body: body).timeout(timeout);
+          res = await http.delete(uri, headers: headers, body: body).timeout(effectiveTimeout);
         } else {
-          res = await http.get(uri, headers: headers).timeout(timeout);
+          res = await http.get(uri, headers: headers).timeout(effectiveTimeout);
         }
         _activeBaseUrl = base;
         return res;
@@ -73,9 +80,9 @@ class ApiService {
       }
     }
     if (lastError is TimeoutException) {
-      throw ApiException('Server is taking longer to respond or waking up. Please try again in a few seconds.', 408);
+      throw ApiException('Server is taking longer to respond. Please try again in a few seconds.', 408);
     }
-    throw ApiException('Unable to connect. Please ensure local backend or server is running.', 503);
+    throw ApiException('Unable to connect. Please ensure your mobile device has active internet access.', 503);
   }
 
   // ─── Token Storage ────────────────────────────────────────────────────────
