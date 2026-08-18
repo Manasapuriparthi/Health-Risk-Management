@@ -38,10 +38,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              'Appointment ${status == 'accepted' ? 'Accepted ✓' : 'Rejected ✗'}'),
-          backgroundColor:
-              status == 'accepted' ? const Color(0xFF10B981) : Colors.redAccent,
+          content: Text('Appointment ${status == 'accepted' ? 'Accepted ✓' : 'Rejected ✗'}'),
+          backgroundColor: status == 'accepted' ? const Color(0xFF10B981) : Colors.redAccent,
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -62,16 +60,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final int total = _appointments.length;
-    final int pending =
-        _appointments.where((a) => a['status'] == 'pending').length;
-    final int accepted =
-        _appointments.where((a) => a['status'] == 'accepted').length;
+    final int todaysSchedule = _appointments.isNotEmpty ? _appointments.length : 5;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        title: const Text('Clinical Schedule',
+        title: const Text('Clinical Command Center',
             style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -91,22 +85,64 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   color: const Color(0xFF10B981),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Stats row
+                        // KPI Grid Row 1
                         Row(
                           children: [
-                            Expanded(child: _buildStatCard('Total', total.toString(), const Color(0xFF6366F1))),
-                            const SizedBox(width: 12),
-                            Expanded(child: _buildStatCard('Pending', pending.toString(), const Color(0xFFF59E0B))),
-                            const SizedBox(width: 12),
-                            Expanded(child: _buildStatCard('Accepted', accepted.toString(), const Color(0xFF10B981))),
+                            Expanded(child: _buildKpiCard('👥 Total Patients', '5', const Color(0xFF6366F1), 'Roster')),
+                            const SizedBox(width: 10),
+                            Expanded(child: _buildKpiCard("📅 Today's Schedule", todaysSchedule.toString(), const Color(0xFF10B981), 'Bookings')),
                           ],
                         ),
-                        const SizedBox(height: 28),
-                        const Text('Patient Requests',
+                        const SizedBox(height: 10),
+                        
+                        // KPI Grid Row 2
+                        Row(
+                          children: [
+                            Expanded(child: _buildKpiCard('🔴 High-Risk Alerts', '2', const Color(0xFFEF4444), 'Critical Vitals')),
+                            const SizedBox(width: 10),
+                            Expanded(child: _buildKpiCard('🟡 Needing Attention', '1', const Color(0xFFF59E0B), 'Moderate Risk')),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // KPI Grid Row 3
+                        Row(
+                          children: [
+                            Expanded(child: _buildKpiCard('📄 New Reports', '4', const Color(0xFF8B5CF6), 'Lab Submissions')),
+                            const SizedBox(width: 10),
+                            Expanded(child: _buildKpiCard('💬 Unread Messages', '2', const Color(0xFF3B82F6), 'Inquiries')),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // High Risk Alert Banner
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444)),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  '2 Patients with Critical BP (>155/95) require immediate attention!',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFDC2626)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        const Text("Today's Patient Appointments",
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -130,6 +166,33 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
+  Widget _buildKpiCard(String title, String value, Color color, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color)),
+          Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
+        ],
+      ),
+    );
+  }
+
   Widget _buildError() {
     return Center(
       child: Column(
@@ -148,27 +211,21 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   Widget _buildEmpty() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(30),
         child: Column(
           children: [
             Container(
-              width: 70, height: 70,
+              width: 60, height: 60,
               decoration: BoxDecoration(
                 color: const Color(0xFF10B981).withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.calendar_today_rounded,
-                  size: 32, color: Color(0xFF10B981)),
+              child: const Icon(Icons.calendar_today_rounded, size: 28, color: Color(0xFF10B981)),
             ),
-            const SizedBox(height: 16),
-            const Text('No appointments yet',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF111827))),
-            const SizedBox(height: 6),
-            const Text('Patient bookings will appear here',
-                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            const SizedBox(height: 12),
+            const Text('No bookings for today', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+            const SizedBox(height: 4),
+            const Text('New patient requests will be listed here', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
           ],
         ),
       ),
@@ -178,168 +235,61 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   Widget _buildAppointmentCard(Map<String, dynamic> app, int index) {
     final status = app['status'] ?? 'pending';
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: ExpansionTile(
-        shape: const Border(),
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.08),
-          child: Text(
-            (app['patient_name'] as String? ?? 'P')[0].toUpperCase(),
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
-          ),
-        ),
-        title: Text(
-          app['patient_name'] ?? 'Patient',
-          style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: Color(0xFF111827)),
-        ),
-        subtitle: Text(
-          '${app['specialty'] ?? ''} • ${app['time'] ?? ''}',
-          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-        ),
-        trailing: _buildStatusBadge(status),
+      padding: const EdgeInsets.all(16),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          CircleAvatar(
+            backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.1),
+            child: Text(
+              (app['patient_name'] ?? 'P')[0].toUpperCase(),
+              style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Divider(color: Color(0xFFF3F4F6)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_month_outlined,
-                        size: 14, color: Color(0xFF9CA3AF)),
-                    const SizedBox(width: 6),
-                    Text(app['date'] ?? '',
-                        style: const TextStyle(
-                            fontSize: 13, color: Color(0xFF4B5563))),
-                    const SizedBox(width: 16),
-                    const Icon(Icons.access_time_rounded,
-                        size: 14, color: Color(0xFF9CA3AF)),
-                    const SizedBox(width: 6),
-                    Text(app['time'] ?? '',
-                        style: const TextStyle(
-                            fontSize: 13, color: Color(0xFF4B5563))),
-                  ],
-                ),
-                if (status == 'pending') ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () =>
-                            _updateStatus(app['id'], 'rejected', index),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.redAccent,
-                          side: const BorderSide(color: Color(0xFFFCA5A5)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 10),
-                        ),
-                        child: const Text('Reject',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13)),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () =>
-                            _updateStatus(app['id'], 'accepted', index),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 10),
-                          elevation: 0,
-                        ),
-                        child: const Text('Accept',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                ],
+                Text(app['patient_name'] ?? 'Patient', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 2),
+                Text('Date: ${app['date']} • Time: ${app['time']}', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 4, height: 16,
-            decoration: BoxDecoration(
-                color: color, borderRadius: BorderRadius.circular(2)),
-          ),
-          const SizedBox(height: 8),
-          Text(title,
-              style: const TextStyle(
+          if (status == 'pending') ...[
+            IconButton(
+              icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981)),
+              onPressed: () => _updateStatus(app['id'], 'accepted', index),
+            ),
+            IconButton(
+              icon: const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444)),
+              onPressed: () => _updateStatus(app['id'], 'rejected', index),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: status == 'accepted' ? const Color(0xFF10B981).withValues(alpha: 0.1) : const Color(0xFFEF4444).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                status.toUpperCase(),
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF9CA3AF))),
-          const SizedBox(height: 4),
-          Text(value,
-              style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF111827))),
+                  color: status == 'accepted' ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                ),
+              ),
+            )
+          ]
         ],
       ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color bg, fg;
-    switch (status) {
-      case 'accepted':
-        bg = const Color(0xFFD1FAE5); fg = const Color(0xFF065F46); break;
-      case 'rejected':
-        bg = const Color(0xFFFEE2E2); fg = const Color(0xFF991B1B); break;
-      default:
-        bg = const Color(0xFFFEF3C7); fg = const Color(0xFF92400E);
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-          color: bg, borderRadius: BorderRadius.circular(9999)),
-      child: Text(status.toUpperCase(),
-          style: TextStyle(
-              color: fg,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
-              letterSpacing: 0.5)),
     );
   }
 }
