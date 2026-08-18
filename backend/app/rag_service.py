@@ -1,88 +1,147 @@
 import os
 import urllib.request
 import json
+import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-# Expanded clinical & general health knowledge base covering a broad spectrum of medical queries
+# Rich clinical knowledge registry with comprehensive keywords & actionable guidance
 KNOWLEDGE_BASE = [
     {
         "id": "headache_migraine",
-        "category": "Headache & Pain",
-        "keywords": "headache migraines head pain throbbing tension headache cluster relief medication treatment tylenol ibuprofen aspirin headache medicine",
-        "title": "Headache & Migraine Management",
-        "content": "Headaches can be caused by tension, stress, dehydration, lack of sleep, or underlying conditions like migraines. Common OTC relief includes Acetaminophen (Tylenol) or NSAIDs like Ibuprofen (Advil/Motrin). For tension headaches, staying hydrated, resting in a dim room, applying a cool compress, and gentle neck stretches help. Seeking urgent medical care is necessary if a headache is sudden and severe ('thunderclap headache'), accompanied by high fever, stiff neck, confusion, numbness, or vision changes."
+        "category": "Headache & Pain Relief",
+        "match_keys": ["headache", "head pain", "migraine", "migraines", "head ache", "headaches", "decrease headache", "relieve headache"],
+        "keywords": "headache migraines head pain throbbing tension headache cluster relief medication treatment tylenol ibuprofen aspirin headache medicine decrease reduce lower stop ease remedy remedies",
+        "title": "How to Relieve & Decrease Headaches",
+        "content": (
+            "Here are evidence-based clinical steps to relieve and decrease headache pain:\n\n"
+            "1. **Hydrate Immediately**: Drink 1–2 large glasses of water. Dehydration is one of the most common causes of acute headaches.\n"
+            "2. **Rest in a Quiet, Dark Room**: Lie down in a dim, quiet room to minimize light and sound sensitivity.\n"
+            "3. **Apply a Cold or Warm Compress**: Place a cold gel pack on your forehead for migraines, or a warm cloth on your neck for tension headaches.\n"
+            "4. **Over-The-Counter Relief**: Over-the-counter medications like **Acetaminophen (Tylenol)** or **Ibuprofen (Advil/Motrin)** reduce pain and inflammation effectively.\n"
+            "5. **Gentle Neck & Temple Massage**: Gently massage your temples, neck, and shoulders to release muscle tension.\n"
+            "6. **Limit Screen Time & Caffeine**: Take a break from mobile/computer screens to reduce eye strain."
+        )
     },
     {
         "id": "fever_flu_cold",
-        "category": "Fever & Infection",
-        "keywords": "fever body temperature flu cold cough chills body ache viral infection medication paracetamol acetaminophen ibuprofen temperature 100 101 102",
-        "title": "Fever & Viral Infection Care",
-        "content": "A fever (body temperature above 100.4°F / 38°C) is the body's natural defense against infection. Stay hydrated with water, clear broths, or oral rehydration fluids. Rest is critical. Over-the-counter antipyretics like Acetaminophen or Paracetamol help lower fever and soothe body aches. Contact a doctor if fever exceeds 103°F (39.4°C), lasts more than 3 days, or is accompanied by difficulty breathing, chest pain, or severe lethargy."
-    },
-    {
-        "id": "respiratory_asthma",
-        "category": "Respiratory",
-        "keywords": "asthma breathing shortness of breath cough wheezing lungs chest tightness allergy inhaler",
-        "title": "Respiratory Health & Asthma Guidance",
-        "content": "Shortness of breath or persistent coughing can stem from asthma, bronchitis, allergies, or viral respiratory infections. Asthma management involves quick-relief rescue inhalers (like Albuterol) and long-term control medications. Avoid known environmental triggers such as smoke, dust, and pet dander. Seek emergency care immediately if experiencing severe gasping, blue lips/fingernails, or inability to speak full sentences."
+        "category": "Fever & Infection Care",
+        "match_keys": ["fever", "flu", "cold", "temperature", "chills", "high fever", "decrease fever", "lower fever"],
+        "keywords": "fever body temperature flu cold cough chills body ache viral infection medication paracetamol acetaminophen ibuprofen temperature 100 101 102 lower decrease treat cure remedies",
+        "title": "Fever & Viral Infection Care Guidelines",
+        "content": (
+            "Here is how to manage and decrease a fever safely:\n\n"
+            "1. **Stay Hydrated**: Drink plenty of fluids (water, electrolyte solutions, herbal tea, clear soups) to replace lost fluids.\n"
+            "2. **Take Fever Reducers**: Use **Acetaminophen (Paracetamol/Tylenol)** or **Ibuprofen** as directed to lower body temperature and ease body aches.\n"
+            "3. **Rest & Cool Down**: Rest in a cool room with lightweight clothing. Use a lukewarm (not ice cold) damp sponge on the forehead or neck.\n"
+            "4. **Monitor Temperature**: Keep track of body readings with a digital thermometer.\n\n"
+            "🚨 *Consult a doctor if fever exceeds 103°F (39.4°C), lasts >3 days, or causes shortness of breath or severe lethargy.*"
+        )
     },
     {
         "id": "digestive_acidity_nausea",
-        "category": "Digestive Health",
-        "keywords": "stomach pain heartburn acidity GERD nausea vomiting diarrhea indigestion constipation stomach ache gas stomach ulcer antacids",
-        "title": "Digestive & Gastrointestinal Health",
-        "content": "Heartburn and acid reflux (GERD) can be managed by avoiding spicy, greasy foods, eating smaller meals, and avoiding lying down for 2-3 hours after eating. OTC antacids or H2 blockers (like Famotidine) offer temporary relief. For mild nausea or stomach upset, try ginger tea, peppermint, or the BRAT diet (Bananas, Rice, Applesauce, Toast). Ensure adequate fluid intake to prevent dehydration during diarrhea or vomiting."
+        "category": "Digestive & Stomach Care",
+        "match_keys": ["stomach", "acidity", "nausea", "vomit", "heartburn", "indigestion", "diarrhea", "stomach pain", "gas"],
+        "keywords": "stomach pain heartburn acidity GERD nausea vomiting diarrhea indigestion constipation stomach ache gas stomach ulcer antacids decrease relieve treat reduce stop",
+        "title": "Managing Stomach Discomfort, Acidity & Nausea",
+        "content": (
+            "Steps to soothe stomach pain, acidity, and nausea:\n\n"
+            "1. **Sip Clear Fluids**: Drink water, ginger tea, or peppermint tea slowly.\n"
+            "2. **Follow the BRAT Diet**: Stick to bland foods — Bananas, Rice, Applesauce, and Toast.\n"
+            "3. **Antacids & Reflux Control**: Take OTC antacids (Tums, Rennie) or Famotidine for acid reflux. Avoid lying down for 2-3 hours after eating.\n"
+            "4. **Avoid Trigger Foods**: Skip spicy, fatty, acidic, or caffeine-heavy items."
+        )
+    },
+    {
+        "id": "respiratory_asthma",
+        "category": "Respiratory Care",
+        "match_keys": ["asthma", "cough", "breathing", "shortness of breath", "lungs", "wheezing"],
+        "keywords": "asthma breathing shortness of breath cough wheezing lungs chest tightness allergy inhaler relief lungs decrease stop treat",
+        "title": "Respiratory Health & Cough Management",
+        "content": (
+            "Clinical guidance for respiratory wellness:\n\n"
+            "1. **Use Prescribed Inhalers**: For asthma or bronchospasm, use your Albuterol rescue inhaler as instructed.\n"
+            "2. **Steam & Warm Liquids**: Inhale steam or drink warm honey-lemon tea to soothe irritated airways and clear phlegm.\n"
+            "3. **Stay Away From Smoke & Irritants**: Avoid tobacco smoke, dust, and heavy outdoor pollution."
+        )
     },
     {
         "id": "allergies_skin",
-        "category": "Allergies & Skin",
-        "keywords": "allergy allergies skin rash itching hives sneezing runny nose antihistamine zyrtec claritin benadryl eczema dermatitis",
-        "title": "Allergies & Skin Rash Care",
-        "content": "Allergic reactions cause sneezing, itchy eyes, runny nose, or skin hives due to histamine release. Non-drowsy OTC antihistamines (Loratadine/Claritin, Cetirizine/Zyrtec, Fexofenadine/Allegra) relieve symptoms. For skin itching and rashes, hydrocortisone cream or calamine lotion helps. Emergency medical help (EpiPen / 911) is required for severe anaphylaxis symptoms such as swelling of the lips, tongue, throat, or wheezing."
+        "category": "Allergies & Skin Care",
+        "match_keys": ["allergy", "allergies", "rash", "itching", "hives", "eczema"],
+        "keywords": "allergy allergies skin rash itching hives sneezing runny nose antihistamine zyrtec claritin benadryl eczema dermatitis relieve treat decrease stop",
+        "title": "Allergy & Skin Rash Relief",
+        "content": (
+            "Steps to reduce allergic reactions and skin irritation:\n\n"
+            "1. **Take OTC Antihistamines**: Non-drowsy options like Cetirizine (Zyrtec) or Loratadine (Claritin) reduce hives, sneezing, and itching.\n"
+            "2. **Topical Relief**: Apply 1% Hydrocortisone cream or Calamine lotion for localized skin itching.\n"
+            "3. **Avoid Known Triggers**: Wash skin and clothes after exposure to outdoor pollen or allergens."
+        )
     },
     {
         "id": "pain_medications_general",
-        "category": "Medication & Pain Relief",
+        "category": "Medication Safety",
+        "match_keys": ["pain", "painkiller", "medicine", "pill", "ibuprofen", "paracetamol", "tylenol", "aspirin"],
         "keywords": "medication pain medicine painkiller ibuprofen acetaminophen naproxen aspirin dosage safety side effects OTC over the counter",
-        "title": "OTC Pain Medications & Safe Usage",
-        "content": "Over-the-counter pain relievers generally fall into two categories: Acetaminophen (Tylenol), which relieves pain and fever without reducing inflammation, and NSAIDs (Ibuprofen, Naproxen, Aspirin), which lower both pain and inflammation. Always adhere to maximum daily dosage limits (e.g. max 3,000-4,000 mg Acetaminophen daily to protect the liver). Take NSAIDs with food to prevent gastric ulceration."
+        "title": "OTC Pain Medication Guidelines",
+        "content": (
+            "Key principles for safe over-the-counter pain relief:\n\n"
+            "1. **Acetaminophen (Tylenol/Paracetamol)**: Excellent for headaches and fever. Do not exceed 3,000–4,000 mg daily to protect liver health.\n"
+            "2. **NSAIDs (Ibuprofen/Naproxen)**: Best for inflammatory pain, joint pain, or dental aches. Always take with food to protect stomach lining."
+        )
     },
     {
         "id": "sleep_stress_mental",
-        "category": "Mental Health & Sleep",
-        "keywords": "sleep insomnia stress anxiety depression mental health fatigue exhaustion restlessness sleep hygiene melatonin relaxation",
-        "title": "Sleep Hygiene & Stress Management",
-        "content": "Quality sleep (7-9 hours per night) and stress reduction are fundamental to immune function and cardiovascular health. Maintain a consistent sleep schedule, limit screen time 1 hour before bed, and keep the bedroom cool and dark. Deep breathing, meditation, and regular physical activity help regulate cortisol and alleviate chronic stress or mild anxiety."
+        "category": "Sleep & Stress Relief",
+        "match_keys": ["sleep", "insomnia", "stress", "anxiety", "tired", "fatigue"],
+        "keywords": "sleep insomnia stress anxiety depression mental health fatigue exhaustion restlessness sleep hygiene melatonin relaxation reduce lower decrease stop ease",
+        "title": "Improving Sleep & Reducing Chronic Stress",
+        "content": (
+            "Evidence-based strategies to relieve stress and sleep better:\n\n"
+            "1. **Consistent Schedule**: Go to bed and wake up at the exact same time every day.\n"
+            "2. **Screen Detox**: Turn off phones, tablets, and TVs 60 minutes before bedtime.\n"
+            "3. **Relaxation Techniques**: Practice 4-7-8 deep breathing or progressive muscle relaxation before bed."
+        )
     },
     {
         "id": "diabetes_definition",
-        "category": "Diabetes",
-        "keywords": "what is diabetes symptoms blood sugar glucose types definition insulin hba1c fasting post prandial",
-        "title": "Understanding & Managing Diabetes",
-        "content": "Diabetes is a chronic metabolic disease characterized by elevated blood glucose. Normal fasting glucose is <100 mg/dL; prediabetes is 100-125 mg/dL; diabetes is ≥126 mg/dL. Manage glucose with a high-fiber, low-glycemic diet (leafy greens, whole grains, lean proteins), regular aerobic exercise (150 min/week), and prescribed medications/insulin as directed by your physician."
+        "category": "Diabetes Management",
+        "match_keys": ["diabetes", "sugar", "blood sugar", "glucose", "hba1c"],
+        "keywords": "what is diabetes symptoms blood sugar glucose types definition insulin hba1c fasting post prandial lower decrease control manage",
+        "title": "Blood Sugar & Diabetes Management",
+        "content": (
+            "How to maintain healthy blood glucose levels:\n\n"
+            "1. **Target Ranges**: Fasting glucose should be <100 mg/dL (100-125 mg/dL indicates prediabetes; ≥126 mg/dL indicates diabetes).\n"
+            "2. **Low-Glycemic Diet**: Eat high-fiber vegetables, oats, quinoa, and lean proteins. Limit sugary beverages and refined carbs.\n"
+            "3. **Post-Meal Walking**: A 15-minute walk after meals significantly lowers postprandial glucose spikes."
+        )
     },
     {
         "id": "hypertension_definition",
-        "category": "Hypertension",
-        "keywords": "what is hypertension blood pressure definition numbers systolic diastolic dash diet sodium low salt high bp",
-        "title": "Understanding & Managing Hypertension",
-        "content": "Hypertension (high blood pressure) occurs when blood force against artery walls remains high. Normal BP is <120/80 mmHg; Stage 1 is 130-139/80-89; Stage 2 is ≥140/90. Lower BP using the DASH diet (reducing sodium <2300 mg/day, increasing potassium and magnesium), engaging in 30 minutes of daily cardio, limiting alcohol, and avoiding smoking."
+        "category": "Hypertension Care",
+        "match_keys": ["bp", "blood pressure", "hypertension", "systolic", "diastolic", "high bp"],
+        "keywords": "what is hypertension blood pressure definition numbers systolic diastolic dash diet sodium low salt high bp lower decrease manage control",
+        "title": "Lowering High Blood Pressure",
+        "content": (
+            "Proven ways to lower and manage blood pressure:\n\n"
+            "1. **DASH Diet**: Restrict sodium to <2,300 mg daily (ideally <1,500 mg). Increase potassium-rich foods (bananas, spinach, avocados).\n"
+            "2. **Aerobic Exercise**: 30 minutes of brisk walking or cycling daily dilates blood vessels and lowers systolic BP by 5–8 mmHg.\n"
+            "3. **Stress & Alcohol Control**: Practice daily relaxation and avoid tobacco or excess alcohol."
+        )
     },
     {
         "id": "cvd_definition",
-        "category": "Cardiovascular Disease",
-        "keywords": "what is cardiovascular disease cvd heart attack stroke cholesterol ldl hdl triglycerides chest pain heart health",
-        "title": "Cardiovascular Disease & Heart Health",
-        "content": "Cardiovascular disease involves the heart and blood vessels, including coronary artery disease and stroke. Key markers include cholesterol (aim for Total <200 mg/dL, LDL <100 mg/dL, HDL >40 mg/dL). Protect heart health through a Mediterranean diet rich in omega-3 fatty acids, maintaining healthy weight, stress management, and regular exercise."
-    },
-    {
-        "id": "first_aid_cuts_burns",
-        "category": "First Aid",
-        "keywords": "first aid minor cuts burns wounds bleeding sprain injury emergency ice compression elevation CPR",
-        "title": "Basic First Aid Guidelines",
-        "content": "For minor cuts: Wash thoroughly with mild soap and water, apply antibiotic ointment, and cover with a sterile bandage. For minor (1st degree) burns: Run cool water over the area for 10-15 minutes (never ice), apply aloe vera or burn gel, and bandage loosely. For acute joint sprains, use RICE: Rest, Ice (15 mins), Compression, and Elevation."
+        "category": "Heart Health & Cholesterol",
+        "match_keys": ["heart", "cholesterol", "cvd", "ldl", "hdl", "triglycerides"],
+        "keywords": "what is cardiovascular disease cvd heart attack stroke cholesterol ldl hdl triglycerides chest pain heart health lower decrease manage",
+        "title": "Cardiovascular Wellness & Cholesterol Control",
+        "content": (
+            "Strategies for optimal heart health:\n\n"
+            "1. **Healthy Lipid Levels**: Target Total Cholesterol <200 mg/dL, LDL <100 mg/dL, and HDL >40 mg/dL.\n"
+            "2. **Heart-Healthy Fats**: Consume Omega-3 fatty acids from salmon, walnuts, flaxseed, and olive oil. Eliminate trans fats.\n"
+            "3. **Regular Monitoring**: Track blood pressure, resting heart rate, and lipid panels annually."
+        )
     }
 ]
 
@@ -93,24 +152,44 @@ tfidf_matrix = vectorizer.fit_transform(documents)
 
 MEDICAL_DISCLAIMER = "\n\n> ⚠️ **Disclaimer**: This AI assistant provides general health information for educational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for severe symptoms or medication advice."
 
-def retrieve_knowledge(query: str, threshold=0.05, top_k=2):
+def retrieve_knowledge(query: str, threshold=0.01, top_k=2):
     """
-    Retrieves matching documents from the knowledge base using TF-IDF cosine similarity.
+    Retrieves matching documents using hybrid semantic TF-IDF similarity + direct keyword matching.
     """
+    q_lower = query.lower()
+    matches = []
+    matched_ids = set()
+
+    # 1. Direct Keyword Matcher
+    for doc in KNOWLEDGE_BASE:
+        for key in doc.get("match_keys", []):
+            if key in q_lower:
+                matches.append({
+                    "document": doc,
+                    "similarity": 1.0
+                })
+                matched_ids.add(doc["id"])
+                break
+        if len(matches) >= top_k:
+            return matches
+
+    # 2. TF-IDF Cosine Similarity Fallback
     query_vec = vectorizer.transform([query])
     similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
-    
     top_indices = np.argsort(similarities)[::-1]
-    matches = []
+
     for idx in top_indices:
         sim = similarities[idx]
-        if sim >= threshold:
+        doc = KNOWLEDGE_BASE[idx]
+        if sim >= threshold and doc["id"] not in matched_ids:
             matches.append({
-                "document": KNOWLEDGE_BASE[idx],
+                "document": doc,
                 "similarity": float(sim)
             })
+            matched_ids.add(doc["id"])
             if len(matches) >= top_k:
                 break
+
     return matches
 
 def _query_openai_llm(prompt: str, user_vitals: dict = None) -> str:
@@ -174,23 +253,24 @@ def generate_rag_response(query: str, user_vitals: dict = None):
             ]
         }
 
-    # 2. Local Semantic RAG Knowledge Pipeline
+    # 2. Hybrid RAG Matcher
     matches = retrieve_knowledge(query)
     response_text = ""
     
     if matches:
-        response_text = "Based on clinical health guidelines, here is the relevant medical guidance:\n\n"
+        response_text = "Based on clinical health guidelines, here is the relevant guidance:\n\n"
         for match in matches:
             doc = match["document"]
             response_text += f"### {doc['title']} ({doc['category']})\n{doc['content']}\n\n"
     else:
         # Dynamic query synthesis for general health questions outside exact index matches
+        clean_q = query.strip().capitalize()
         response_text = (
-            f"### Health & Medical Guidance: '{query.title()}'\n"
+            f"### Health & Medical Guidance: '{clean_q}'\n\n"
             f"Here is general medical advice regarding your query:\n\n"
-            f"- **General Care**: For general discomfort, fever, or mild aches, rest, adequate hydration, and balanced nutrition are primary recovery measures.\n"
+            f"- **General Care**: For general physical discomfort, fever, or mild aches, rest, adequate hydration (2–3 liters of water daily), and balanced nutrition are primary recovery measures.\n"
             f"- **Over-The-Counter Relief**: Common OTC medications like Acetaminophen (Tylenol) can manage mild pain or fever, while Antihistamines can soothe mild allergic reactions. Always check package dosages.\n"
-            f"- **When to See a Doctor**: If you experience persistent severe pain, high fever (>103°F), shortness of breath, chest pressure, or symptoms lasting more than 3-5 days, consult a physician promptly.\n\n"
+            f"- **When to See a Doctor**: If you experience persistent severe pain, high fever (>103°F / 39.4°C), shortness of breath, chest pressure, or symptoms lasting more than 3-5 days, consult a physician promptly.\n\n"
         )
 
     # 3. Integrate User Vitals Context Correlation if available
@@ -228,13 +308,13 @@ def generate_rag_response(query: str, user_vitals: dict = None):
     # 5. Formulate dynamic follow-up suggestions
     categories = list(set([m["document"]["category"] for m in matches])) if matches else ["General"]
     suggestions = []
-    if "Headache & Pain" in categories or "Medication" in categories:
+    if "Headache & Pain Relief" in categories or "Medication Safety" in categories:
         suggestions = ["What is the safe maximum daily dose of Tylenol?", "When is a headache considered a medical emergency?", "Difference between tension headache and migraine"]
-    elif "Fever & Infection" in categories:
+    elif "Fever & Infection Care" in categories:
         suggestions = ["When should a fever be evaluated by a doctor?", "How to stay hydrated during viral fever?", "Difference between cold and flu symptoms"]
-    elif "Respiratory" in categories:
+    elif "Respiratory Care" in categories:
         suggestions = ["What triggers asthma flare-ups?", "When should I use a rescue inhaler?", "How to improve lung capacity"]
-    elif "Digestive Health" in categories:
+    elif "Digestive & Stomach Care" in categories:
         suggestions = ["What foods help soothe acid reflux?", "What is the BRAT diet?", "When does stomach pain require ER care?"]
     else:
         suggestions = ["What are normal vital sign ranges?", "When should I seek emergency medical care?", "How does sleep affect immune health?"]
