@@ -203,21 +203,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       childAspectRatio: 1.45,
                       children: [
                         _vitalCard('Blood Pressure',
-                            _latestVitals != null
-                                ? '${_latestVitals!['systolic_bp'] ?? '--'}/${_latestVitals!['diastolic_bp'] ?? '--'}'
-                                : '120/80',
+                            (_latestVitals != null && _latestVitals!['systolic_bp'] != null && _latestVitals!['diastolic_bp'] != null)
+                                ? '${_latestVitals!['systolic_bp']}/${_latestVitals!['diastolic_bp']}'
+                                : '--',
                             'mmHg', Icons.favorite_rounded,
                             const Color(0xFFEF4444)),
                         _vitalCard('Blood Sugar',
-                            '${_latestVitals?['blood_sugar'] ?? '95'}',
+                            _latestVitals?['blood_sugar'] != null ? '${_latestVitals!['blood_sugar']}' : '--',
                             'mg/dL', Icons.bubble_chart_rounded,
                             const Color(0xFFF59E0B)),
                         _vitalCard('Heart Rate',
-                            '${_latestVitals?['heart_rate'] ?? '72'}',
+                            _latestVitals?['heart_rate'] != null ? '${_latestVitals!['heart_rate']}' : '--',
                             'bpm', Icons.monitor_heart_rounded,
                             AppColors.accent),
                         _vitalCard('Cholesterol',
-                            '${_latestVitals?['cholesterol'] ?? '180'}',
+                            _latestVitals?['cholesterol'] != null ? '${_latestVitals!['cholesterol']}' : '--',
                             'mg/dL', Icons.speed_rounded,
                             AppColors.accentIndigo),
                       ],

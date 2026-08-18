@@ -40,6 +40,19 @@ async def log_vital(vital: VitalLog, current_user: dict = Depends(get_current_us
     
     result = await vitals_collection.insert_one(vital_dict)
     vital_dict["id"] = str(result.inserted_id)
+
+    # Sync weight and active_minutes to user profile document if provided
+    updates = {}
+    if vital.weight is not None:
+        updates["weight"] = vital.weight
+    if vital.active_minutes is not None:
+        updates["active_minutes"] = vital.active_minutes
+    if updates:
+        await users_collection.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": updates}
+        )
+
     return vital_dict
 
 @router.get("", response_model=List[VitalResponse])

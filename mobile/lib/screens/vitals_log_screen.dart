@@ -65,6 +65,9 @@ class _VitalsLogScreenState extends State<VitalsLogScreen> {
       if (!mounted) return;
       setState(() => _submitted = true);
       _showSnack('Vitals logged successfully!');
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) Navigator.pop(context, true);
+      });
     } catch (e) {
       if (!mounted) return;
       _showSnack(e.toString(), isError: true);
