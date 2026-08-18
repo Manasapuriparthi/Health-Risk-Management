@@ -79,6 +79,8 @@ app.include_router(twin.router, prefix="/api/twin", tags=["AI Health Twin"])
 app.include_router(planner.router, prefix="/api/planner", tags=["Health Planners"])
 app.include_router(appointments.router, prefix="/api/appointments", tags=["Clinical Appointments"])
 
+from fastapi.responses import JSONResponse, FileResponse
+
 @app.get("/api/health")
 async def health_check():
     db_status = await check_db_health()
@@ -86,3 +88,13 @@ async def health_check():
         "status": "healthy",
         "database": db_status
     }
+
+@app.get("/download/apk")
+@app.get("/app-debug.apk")
+async def download_apk():
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    apk_path = os.path.join(root_dir, "app-debug.apk")
+    if os.path.exists(apk_path):
+        return FileResponse(apk_path, media_type="application/vnd.android.package-archive", filename="app-debug.apk")
+    return JSONResponse(status_code=404, content={"detail": "APK file not found"})
+
