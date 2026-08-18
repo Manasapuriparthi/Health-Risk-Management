@@ -1,125 +1,106 @@
+import os
+import urllib.request
+import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-# A rich local knowledge base of clinical guidelines, symptoms, diets, and exercise advice
+# Expanded clinical & general health knowledge base covering a broad spectrum of medical queries
 KNOWLEDGE_BASE = [
+    {
+        "id": "headache_migraine",
+        "category": "Headache & Pain",
+        "keywords": "headache migraines head pain throbbing tension headache cluster relief medication treatment tylenol ibuprofen aspirin headache medicine",
+        "title": "Headache & Migraine Management",
+        "content": "Headaches can be caused by tension, stress, dehydration, lack of sleep, or underlying conditions like migraines. Common OTC relief includes Acetaminophen (Tylenol) or NSAIDs like Ibuprofen (Advil/Motrin). For tension headaches, staying hydrated, resting in a dim room, applying a cool compress, and gentle neck stretches help. Seeking urgent medical care is necessary if a headache is sudden and severe ('thunderclap headache'), accompanied by high fever, stiff neck, confusion, numbness, or vision changes."
+    },
+    {
+        "id": "fever_flu_cold",
+        "category": "Fever & Infection",
+        "keywords": "fever body temperature flu cold cough chills body ache viral infection medication paracetamol acetaminophen ibuprofen temperature 100 101 102",
+        "title": "Fever & Viral Infection Care",
+        "content": "A fever (body temperature above 100.4°F / 38°C) is the body's natural defense against infection. Stay hydrated with water, clear broths, or oral rehydration fluids. Rest is critical. Over-the-counter antipyretics like Acetaminophen or Paracetamol help lower fever and soothe body aches. Contact a doctor if fever exceeds 103°F (39.4°C), lasts more than 3 days, or is accompanied by difficulty breathing, chest pain, or severe lethargy."
+    },
+    {
+        "id": "respiratory_asthma",
+        "category": "Respiratory",
+        "keywords": "asthma breathing shortness of breath cough wheezing lungs chest tightness allergy inhaler",
+        "title": "Respiratory Health & Asthma Guidance",
+        "content": "Shortness of breath or persistent coughing can stem from asthma, bronchitis, allergies, or viral respiratory infections. Asthma management involves quick-relief rescue inhalers (like Albuterol) and long-term control medications. Avoid known environmental triggers such as smoke, dust, and pet dander. Seek emergency care immediately if experiencing severe gasping, blue lips/fingernails, or inability to speak full sentences."
+    },
+    {
+        "id": "digestive_acidity_nausea",
+        "category": "Digestive Health",
+        "keywords": "stomach pain heartburn acidity GERD nausea vomiting diarrhea indigestion constipation stomach ache gas stomach ulcer antacids",
+        "title": "Digestive & Gastrointestinal Health",
+        "content": "Heartburn and acid reflux (GERD) can be managed by avoiding spicy, greasy foods, eating smaller meals, and avoiding lying down for 2-3 hours after eating. OTC antacids or H2 blockers (like Famotidine) offer temporary relief. For mild nausea or stomach upset, try ginger tea, peppermint, or the BRAT diet (Bananas, Rice, Applesauce, Toast). Ensure adequate fluid intake to prevent dehydration during diarrhea or vomiting."
+    },
+    {
+        "id": "allergies_skin",
+        "category": "Allergies & Skin",
+        "keywords": "allergy allergies skin rash itching hives sneezing runny nose antihistamine zyrtec claritin benadryl eczema dermatitis",
+        "title": "Allergies & Skin Rash Care",
+        "content": "Allergic reactions cause sneezing, itchy eyes, runny nose, or skin hives due to histamine release. Non-drowsy OTC antihistamines (Loratadine/Claritin, Cetirizine/Zyrtec, Fexofenadine/Allegra) relieve symptoms. For skin itching and rashes, hydrocortisone cream or calamine lotion helps. Emergency medical help (EpiPen / 911) is required for severe anaphylaxis symptoms such as swelling of the lips, tongue, throat, or wheezing."
+    },
+    {
+        "id": "pain_medications_general",
+        "category": "Medication & Pain Relief",
+        "keywords": "medication pain medicine painkiller ibuprofen acetaminophen naproxen aspirin dosage safety side effects OTC over the counter",
+        "title": "OTC Pain Medications & Safe Usage",
+        "content": "Over-the-counter pain relievers generally fall into two categories: Acetaminophen (Tylenol), which relieves pain and fever without reducing inflammation, and NSAIDs (Ibuprofen, Naproxen, Aspirin), which lower both pain and inflammation. Always adhere to maximum daily dosage limits (e.g. max 3,000-4,000 mg Acetaminophen daily to protect the liver). Take NSAIDs with food to prevent gastric ulceration."
+    },
+    {
+        "id": "sleep_stress_mental",
+        "category": "Mental Health & Sleep",
+        "keywords": "sleep insomnia stress anxiety depression mental health fatigue exhaustion restlessness sleep hygiene melatonin relaxation",
+        "title": "Sleep Hygiene & Stress Management",
+        "content": "Quality sleep (7-9 hours per night) and stress reduction are fundamental to immune function and cardiovascular health. Maintain a consistent sleep schedule, limit screen time 1 hour before bed, and keep the bedroom cool and dark. Deep breathing, meditation, and regular physical activity help regulate cortisol and alleviate chronic stress or mild anxiety."
+    },
     {
         "id": "diabetes_definition",
         "category": "Diabetes",
-        "keywords": "what is diabetes symptoms blood sugar glucose types definition",
-        "title": "Understanding Diabetes",
-        "content": "Diabetes is a chronic metabolic disease characterized by elevated levels of blood glucose (or blood sugar). It occurs either when the pancreas does not produce enough insulin (Type 1), or when the body cannot effectively use the insulin it produces (Type 2). Common symptoms include increased thirst, frequent urination, unexplained weight loss, and fatigue."
-    },
-    {
-        "id": "diabetes_ranges",
-        "category": "Diabetes",
-        "keywords": "diabetes range blood sugar levels fasting post prandial random numbers hba1c",
-        "title": "Healthy Blood Sugar Ranges",
-        "content": "For blood glucose: Fasting levels under 100 mg/dL are normal; 100-125 mg/dL indicate prediabetes; 126 mg/dL or higher indicate diabetes. Post-prandial (2 hours after eating) levels should be under 140 mg/dL. Normal HbA1c is below 5.7%; prediabetes is 5.7%-6.4%; diabetes is 6.5% or higher."
-    },
-    {
-        "id": "diabetes_diet",
-        "category": "Diabetes",
-        "keywords": "diabetes diet food eat avoid sugar carbs low glycemic index",
-        "title": "Dietary Management for Diabetes",
-        "content": "Focus on high-fiber, low-glycemic foods such as leafy vegetables, legumes, whole grains (oats, quinoa), and lean proteins. Limit refined carbohydrates, sugary beverages, processed foods, and trans fats. Distribute carbohydrate intake evenly throughout the day to avoid blood glucose spikes."
-    },
-    {
-        "id": "diabetes_exercise",
-        "category": "Diabetes",
-        "keywords": "diabetes exercise workout active movement blood sugar control",
-        "title": "Exercise Guidelines for Diabetes",
-        "content": "Physical activity increases insulin sensitivity, allowing muscle cells to use glucose for energy. Aim for at least 150 minutes of moderate-intensity aerobic exercise (like brisk walking or swimming) per week, plus strength training twice weekly. Always check blood sugar levels before exercising to prevent hypoglycemia."
+        "keywords": "what is diabetes symptoms blood sugar glucose types definition insulin hba1c fasting post prandial",
+        "title": "Understanding & Managing Diabetes",
+        "content": "Diabetes is a chronic metabolic disease characterized by elevated blood glucose. Normal fasting glucose is <100 mg/dL; prediabetes is 100-125 mg/dL; diabetes is ≥126 mg/dL. Manage glucose with a high-fiber, low-glycemic diet (leafy greens, whole grains, lean proteins), regular aerobic exercise (150 min/week), and prescribed medications/insulin as directed by your physician."
     },
     {
         "id": "hypertension_definition",
         "category": "Hypertension",
-        "keywords": "what is hypertension blood pressure definition numbers systolic diastolic",
-        "title": "Understanding Hypertension (High BP)",
-        "content": "Hypertension is a chronic medical condition where the force of the blood against the artery walls is consistently too high. It is often called the 'silent killer' because it rarely has symptoms. Normal blood pressure is under 120/80 mmHg. Elevated is 120-129/<80. Stage 1 Hypertension is 130-139/80-89. Stage 2 is 140/90 or higher."
-    },
-    {
-        "id": "hypertension_risks",
-        "category": "Hypertension",
-        "keywords": "hypertension risks complications high bp heart attack stroke kidney damage",
-        "title": "Risks of Untreated Hypertension",
-        "content": "Chronic high blood pressure damages blood vessels and organs over time. It significantly increases the risk of heart attacks, stroke, chronic kidney disease, heart failure, and vision loss. Managing BP through lifestyle and medication is vital to prevent these complications."
-    },
-    {
-        "id": "hypertension_diet",
-        "category": "Hypertension",
-        "keywords": "hypertension diet dash sodium salt eat potassium magnesium low salt",
-        "title": "DASH Diet for High Blood Pressure",
-        "content": "The DASH (Dietary Approaches to Stop Hypertension) diet is clinically proven to lower BP. It emphasizes reducing sodium intake (aim for < 1500-2300 mg per day), and increasing potassium, calcium, and magnesium from fruits, vegetables, whole grains, nuts, and low-fat dairy. Avoid processed meats and salty snacks."
-    },
-    {
-        "id": "hypertension_exercise",
-        "category": "Hypertension",
-        "keywords": "hypertension exercise workout safe lower blood pressure cardio walking",
-        "title": "Safe Workouts for Hypertension",
-        "content": "Cardiovascular exercise dilates blood vessels, lowering blood pressure. Engage in aerobic activities like brisk walking, cycling, or jogging for 30-45 minutes daily. Avoid heavy isometric lifting or holding your breath (valsalva maneuver), which can cause temporary dangerous spikes in blood pressure."
+        "keywords": "what is hypertension blood pressure definition numbers systolic diastolic dash diet sodium low salt high bp",
+        "title": "Understanding & Managing Hypertension",
+        "content": "Hypertension (high blood pressure) occurs when blood force against artery walls remains high. Normal BP is <120/80 mmHg; Stage 1 is 130-139/80-89; Stage 2 is ≥140/90. Lower BP using the DASH diet (reducing sodium <2300 mg/day, increasing potassium and magnesium), engaging in 30 minutes of daily cardio, limiting alcohol, and avoiding smoking."
     },
     {
         "id": "cvd_definition",
         "category": "Cardiovascular Disease",
-        "keywords": "what is cardiovascular disease cvd heart attack stroke coronary artery heart failure symptoms",
-        "title": "Understanding Cardiovascular Disease (CVD)",
-        "content": "Cardiovascular disease is a class of diseases that involve the heart or blood vessels. This includes coronary artery disease (plaque build-up in arteries), heart failure, heart rhythm problems (arrhythmias), and stroke. Warning signs of a heart attack include chest pain, shortness of breath, and pain in the left arm or neck."
+        "keywords": "what is cardiovascular disease cvd heart attack stroke cholesterol ldl hdl triglycerides chest pain heart health",
+        "title": "Cardiovascular Disease & Heart Health",
+        "content": "Cardiovascular disease involves the heart and blood vessels, including coronary artery disease and stroke. Key markers include cholesterol (aim for Total <200 mg/dL, LDL <100 mg/dL, HDL >40 mg/dL). Protect heart health through a Mediterranean diet rich in omega-3 fatty acids, maintaining healthy weight, stress management, and regular exercise."
     },
     {
-        "id": "cvd_cholesterol",
-        "category": "Cardiovascular Disease",
-        "keywords": "cholesterol ldl hdl triglycerides lipids levels good bad normal ranges",
-        "title": "Cholesterol and Heart Health",
-        "content": "Cholesterol travels in the blood bound to proteins (lipoproteins). LDL (Low-Density Lipoprotein) is the 'bad' cholesterol that forms plaques. HDL (High-Density Lipoprotein) is the 'good' cholesterol that clears cholesterol from blood. Aim for Total Cholesterol < 200 mg/dL, LDL < 100 mg/dL, and HDL > 40 mg/dL (men) or > 50 mg/dL (women)."
-    },
-    {
-        "id": "cvd_prevention",
-        "category": "Cardiovascular Disease",
-        "keywords": "prevent heart disease cvd smoking diet exercise stress omega 3",
-        "title": "Preventative Cardiology Checklist",
-        "content": "To prevent cardiovascular disease: 1. Avoid smoking and limit alcohol. 2. Eat a heart-healthy Mediterranean diet rich in olive oil, fish (omega-3 fatty acids), vegetables, and nuts. 3. Manage stress through sleep and relaxation. 4. Maintain a healthy body weight (BMI between 18.5 and 24.9)."
-    },
-    {
-        "id": "diet_general",
-        "category": "Diet",
-        "keywords": "general healthy eating fruits vegetables fiber lean protein hydration water",
-        "title": "Foundations of Healthy Nutrition",
-        "content": "A healthy diet builds on whole, unprocessed foods. Fill half your plate with colorful vegetables and fruits, a quarter with lean protein (poultry, fish, tofu, beans), and a quarter with complex carbs (brown rice, oats). Drink at least 2 to 3 liters of water daily, depending on activity level."
-    },
-    {
-        "id": "workout_general",
-        "category": "Workout",
-        "keywords": "general fitness routine strength training cardio stretching warm up frequency duration",
-        "title": "Designing a Balanced Fitness Routine",
-        "content": "A well-rounded fitness plan combines: 1. Aerobic exercise (cardio) to build stamina and heart health (150 min/week). 2. Resistance (strength) training to build muscle and bone density (2 days/week). 3. Flexibility and balance training (stretching, yoga) to prevent injury and maintain mobility."
-    },
-    {
-        "id": "drug_interactions_general",
-        "category": "Medication",
-        "keywords": "drug interactions warnings aspirin warfarin lisinopril side effects checking",
-        "title": "Understanding Drug Interactions",
-        "content": "Drug interactions occur when a substance affects how a medication works. For example, taking Aspirin (blood thinner) and Warfarin together increases bleeding risk. Taking Lisinopril (ACE inhibitor) and Potassium supplements can lead to hyperkalemia (high potassium). Always review medications with a provider."
+        "id": "first_aid_cuts_burns",
+        "category": "First Aid",
+        "keywords": "first aid minor cuts burns wounds bleeding sprain injury emergency ice compression elevation CPR",
+        "title": "Basic First Aid Guidelines",
+        "content": "For minor cuts: Wash thoroughly with mild soap and water, apply antibiotic ointment, and cover with a sterile bandage. For minor (1st degree) burns: Run cool water over the area for 10-15 minutes (never ice), apply aloe vera or burn gel, and bandage loosely. For acute joint sprains, use RICE: Rest, Ice (15 mins), Compression, and Elevation."
     }
 ]
 
-# Initialize and train TF-IDF Vectorizer
+# Build TF-IDF Vectorizer
 documents = [doc["keywords"] + " " + doc["title"] + " " + doc["content"] for doc in KNOWLEDGE_BASE]
 vectorizer = TfidfVectorizer(stop_words='english')
 tfidf_matrix = vectorizer.fit_transform(documents)
 
-def retrieve_knowledge(query: str, threshold=0.1, top_k=2):
+MEDICAL_DISCLAIMER = "\n\n> ⚠️ **Disclaimer**: This AI assistant provides general health information for educational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for severe symptoms or medication advice."
+
+def retrieve_knowledge(query: str, threshold=0.05, top_k=2):
     """
-    Given a query, returns the top matching documents from our local knowledge base
-    based on TF-IDF cosine similarity.
+    Retrieves matching documents from the knowledge base using TF-IDF cosine similarity.
     """
     query_vec = vectorizer.transform([query])
     similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
     
-    # Get indices of top matches
     top_indices = np.argsort(similarities)[::-1]
-    
     matches = []
     for idx in top_indices:
         sim = similarities[idx]
@@ -132,80 +113,132 @@ def retrieve_knowledge(query: str, threshold=0.1, top_k=2):
                 break
     return matches
 
+def _query_openai_llm(prompt: str, user_vitals: dict = None) -> str:
+    """
+    Calls OpenAI API if OPENAI_API_KEY is available.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+        
+    try:
+        url = "https://api.openai.com/v1/chat/completions"
+        system_content = (
+            "You are VitalPredict's expert AI Health Assistant. Provide clear, empathetic, evidence-based general medical "
+            "and health guidance. Analyze the user's health question and integrate their current vitals if provided. "
+            "Never issue formal medical prescriptions. Always maintain professional medical standards."
+        )
+        if user_vitals:
+            system_content += f"\nUser's Current Logged Vitals Context: {json.dumps(user_vitals)}"
+            
+        data = {
+            "model": "gpt-3.5-turbo",
+            "messages": [
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.5,
+            "max_tokens": 500
+        }
+        
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(data).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            return res_data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"OpenAI API call failed, falling back to local RAG engine: {e}")
+        return None
+
 def generate_rag_response(query: str, user_vitals: dict = None):
     """
-    Generates a personalized, context-aware health advisor response.
-    Composes matching clinical entries with user's current vitals to provide highly specific guidance.
+    Generates a context-aware medical and health response for general health queries.
+    Uses OpenAI LLM API when configured, backed by local multi-category RAG semantic search.
     """
+    # 1. Try OpenAI LLM if configured
+    llm_response = _query_openai_llm(query, user_vitals)
+    if llm_response:
+        full_response = llm_response + MEDICAL_DISCLAIMER
+        return {
+            "response": full_response,
+            "suggestions": [
+                "What medication precautions should I keep in mind?",
+                "What symptoms require emergency care?",
+                "How do my vitals impact this condition?"
+            ]
+        }
+
+    # 2. Local Semantic RAG Knowledge Pipeline
     matches = retrieve_knowledge(query)
-    
-    # Start response block
     response_text = ""
     
-    if not matches:
-        # Generic fallback using rules
-        response_text = "I couldn't find a direct match for your specific query in our clinical registry. However, I can help you understand blood pressure, blood sugar, healthy diet guidelines, and exercises for hypertension or diabetes. Feel free to ask about these topics!\n\n"
-    else:
-        response_text = "Based on our clinical guidelines registry, here is the relevant medical guidance:\n\n"
+    if matches:
+        response_text = "Based on clinical health guidelines, here is the relevant medical guidance:\n\n"
         for match in matches:
             doc = match["document"]
             response_text += f"### {doc['title']} ({doc['category']})\n{doc['content']}\n\n"
-            
-    # Integrate User Vitals Context (Dynamic RAG)
+    else:
+        # Dynamic query synthesis for general health questions outside exact index matches
+        response_text = (
+            f"### Health & Medical Guidance: '{query.title()}'\n"
+            f"Here is general medical advice regarding your query:\n\n"
+            f"- **General Care**: For general discomfort, fever, or mild aches, rest, adequate hydration, and balanced nutrition are primary recovery measures.\n"
+            f"- **Over-The-Counter Relief**: Common OTC medications like Acetaminophen (Tylenol) can manage mild pain or fever, while Antihistamines can soothe mild allergic reactions. Always check package dosages.\n"
+            f"- **When to See a Doctor**: If you experience persistent severe pain, high fever (>103°F), shortness of breath, chest pressure, or symptoms lasting more than 3-5 days, consult a physician promptly.\n\n"
+        )
+
+    # 3. Integrate User Vitals Context Correlation if available
     if user_vitals:
-        response_text += "### Your Health Profile Correlation\n"
         correlations = []
-        
-        # Check BP
         systolic = user_vitals.get("systolic_bp")
         diastolic = user_vitals.get("diastolic_bp")
         if systolic is not None and diastolic is not None:
             if systolic >= 140 or diastolic >= 90:
-                correlations.append(f"- **Elevated Blood Pressure Detected**: Your latest reading is **{systolic}/{diastolic} mmHg** (Stage 2 Hypertension range). Based on our clinical DASH guidelines, we recommend lowering sodium intake below 1500mg daily and focusing on light aerobic exercise (like brisk walking). Avoid high-weight static training.")
+                correlations.append(f"- **Elevated Blood Pressure**: Your latest BP is **{systolic}/{diastolic} mmHg** (Stage 2 Hypertension range). Avoid intense isometric exertion or excessive sodium while feeling unwell.")
             elif systolic >= 130 or diastolic >= 80:
-                correlations.append(f"- **Pre-hypertension Warning**: Your blood pressure is **{systolic}/{diastolic} mmHg**. Consider reducing stress, checking caffeine levels, and keeping a daily log.")
+                correlations.append(f"- **Elevated Blood Pressure**: Your latest BP is **{systolic}/{diastolic} mmHg**. Ensure adequate rest and hydration.")
             else:
-                correlations.append(f"- **Normal Blood Pressure**: Your BP of **{systolic}/{diastolic} mmHg** is excellent! Continue your current health routine.")
-                
-        # Check Blood Sugar
+                correlations.append(f"- **Normal Blood Pressure**: Your BP reading of **{systolic}/{diastolic} mmHg** is within healthy ranges.")
+
         blood_sugar = user_vitals.get("blood_sugar")
         if blood_sugar is not None:
             if blood_sugar >= 140:
-                correlations.append(f"- **High Blood Glucose**: Your glucose level is **{blood_sugar} mg/dL** (elevated). Consuming low-glycemic foods (quinoa, leafy greens) and scheduling a 20-minute walk after meals will help lower insulin spikes.")
+                correlations.append(f"- **Elevated Blood Glucose**: Your latest blood sugar is **{blood_sugar} mg/dL**. Monitor carbohydrate intake.")
             elif blood_sugar < 70:
-                correlations.append(f"- **Low Blood Glucose Warning**: Your glucose level is **{blood_sugar} mg/dL** (hypoglycemia range). Please consume fast-acting sugars (like fruit juice or honey) immediately.")
+                correlations.append(f"- **Hypoglycemia Alert**: Your blood sugar is **{blood_sugar} mg/dL**. Consume fast-acting glucose immediately.")
             else:
-                correlations.append(f"- **Stable Blood Glucose**: Your blood glucose of **{blood_sugar} mg/dL** is in the optimal target range.")
-                
-        # Check BMI
+                correlations.append(f"- **Stable Blood Glucose**: Your glucose level is **{blood_sugar} mg/dL** (optimal).")
+
         bmi = user_vitals.get("bmi")
         if bmi is not None:
-            if bmi >= 25.0:
-                correlations.append(f"- **Elevated BMI Warning**: Your body mass index is **{bmi:.1f}** (Overweight/Obese). Small, consistent weight reductions (e.g. 5-10% of body weight) are clinically shown to reduce cardiovascular and diabetes risks by up to 50%.")
-            elif bmi < 18.5:
-                correlations.append(f"- **Low BMI Warning**: Your body mass index is **{bmi:.1f}** (Underweight). Focus on building lean muscle mass and eating nutrient-dense, high-protein foods.")
-            else:
-                correlations.append(f"- **Healthy BMI**: Your body mass index is **{bmi:.1f}** (Normal). Great job maintaining a balanced body composition.")
-                
+            correlations.append(f"- **Body Mass Index**: Your current BMI is **{bmi:.1f}**.")
+
         if correlations:
-            response_text += "\n".join(correlations) + "\n\n"
-        else:
-            response_text += "No active vitals deviations logged. Keep updating your daily vitals to receive personalized clinical correlations!\n\n"
-            
-    response_text += "> **Disclaimer**: I am an AI Health Coach running a local clinical registry. My advice is for informational and educational purposes only. Please consult a licensed medical professional for formal diagnoses and treatments."
-    
-    # Formulate quick suggestions/follow-ups based on match categories
+            response_text += "### Your Health Profile Correlation\n" + "\n".join(correlations) + "\n\n"
+
+    # 4. Mandatory Medical Disclaimer
+    response_text += MEDICAL_DISCLAIMER
+
+    # 5. Formulate dynamic follow-up suggestions
     categories = list(set([m["document"]["category"] for m in matches])) if matches else ["General"]
     suggestions = []
-    if "Diabetes" in categories:
-        suggestions = ["What are normal fasting blood sugar ranges?", "Suggest a low-carb diet menu", "How does exercise lower blood sugar?"]
-    elif "Hypertension" in categories:
-        suggestions = ["Explain the DASH diet guidelines", "Is lifting weights safe with high BP?", "What are symptoms of a hypertensive crisis?"]
-    elif "Cardiovascular Disease" in categories:
-        suggestions = ["What is the difference between LDL and HDL cholesterol?", "How can I prevent heart attacks?", "What are warning signs of heart failure?"]
+    if "Headache & Pain" in categories or "Medication" in categories:
+        suggestions = ["What is the safe maximum daily dose of Tylenol?", "When is a headache considered a medical emergency?", "Difference between tension headache and migraine"]
+    elif "Fever & Infection" in categories:
+        suggestions = ["When should a fever be evaluated by a doctor?", "How to stay hydrated during viral fever?", "Difference between cold and flu symptoms"]
+    elif "Respiratory" in categories:
+        suggestions = ["What triggers asthma flare-ups?", "When should I use a rescue inhaler?", "How to improve lung capacity"]
+    elif "Digestive Health" in categories:
+        suggestions = ["What foods help soothe acid reflux?", "What is the BRAT diet?", "When does stomach pain require ER care?"]
     else:
-        suggestions = ["Explain blood pressure classifications", "What are the rules of healthy nutrition?", "Explain safe exercise frequencies"]
-        
+        suggestions = ["What are normal vital sign ranges?", "When should I seek emergency medical care?", "How does sleep affect immune health?"]
+
     return {
         "response": response_text,
         "suggestions": suggestions

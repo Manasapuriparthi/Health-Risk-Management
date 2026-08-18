@@ -46,8 +46,18 @@ async def get_appointments(current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role", "patient")
     
     if user_role == "doctor":
-        # Doctors see all appointments
-        cursor = appointments_collection.find().sort("created_at", -1)
+        # Doctors see only appointments matching their name or specialty
+        doctor_name = current_user.get("username")
+        specialty = current_user.get("specialty")
+        
+        query_conditions = []
+        if doctor_name:
+            query_conditions.append({"doctor_name": doctor_name})
+        if specialty:
+            query_conditions.append({"specialty": {"$regex": f"^{specialty}$", "$options": "i"}})
+            
+        query = {"$or": query_conditions} if query_conditions else {}
+        cursor = appointments_collection.find(query).sort("created_at", -1)
     else:
         # Patients see only their own
         cursor = appointments_collection.find({"patient_id": str(current_user["_id"])}).sort("created_at", -1)
